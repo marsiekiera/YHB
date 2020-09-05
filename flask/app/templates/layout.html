@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">      
+        <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
+
+        <!-- https://findicons.com/icon/download/67200/emblem_money/64/ico -->
+        <link href="/static/favicon.ico" rel="icon">
+        
+        <title>YHB: {% block title %}{% endblock %}</title>
+    </head>
+
+    <body>
+        {% block main %}{% endblock %}
+    </body>
+</html>
