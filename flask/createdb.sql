@@ -1,0 +1,2 @@
+CREATE TABLE users (id INTEGER PRIMARY KEY, user_name TEXT NOT NULL, hash TEXT NOT NULL);
+CREATE TABLE category (category_id INTEGER PRIMARY KEY, category_name TEXT NOT NULL, user_id INTEGER NOT NULL);
