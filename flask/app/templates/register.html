@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <form action="/register" method="POST">
+        <input autocomplete="off" placeholder="Username" name="user_name" type="text">
+        <label for="password">Your password must contain at least 1 uppercase and 1 lowercase letter, 1 number and 1 symbol.</label>
+        <input autocomplete="off" placeholder="Password" name="password" type="password">
+        <input autocomplete="off" placeholder="Re-type password" name="re_password" type="password">
+        <button type="submit">Register</button>
+    </form>
+{% endblock %}
