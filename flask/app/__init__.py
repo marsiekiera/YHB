@@ -8,5 +8,5 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 from app import views
 
-conn = sqlite3.connect('sqlite.db')
-db = conn.cursor()
+#conn = sqlite3.connect('sqlite.db')
+#db = conn.cursor()
