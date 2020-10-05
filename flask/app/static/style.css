@@ -1,3 +1,12 @@
 * {
-    background: gray;
+    background-color: gray;
+}
+
+.error {
+    color: yellow;
+    background-color: red;
+}
+
+.info {
+    background-color: green;
 }
