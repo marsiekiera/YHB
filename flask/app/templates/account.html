@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ account_name }}
+{% endblock %}
+
+{% block main %}
+    <h1>{{ account_name }}</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Payee</th>
+                <th>Amount</th>
+                <!-- add <th>Balance</th> in future-->
+            </tr>
+        </thead>
+        <tfoot>
+            <td colspan="2">Ending balance</td>
+            <td>{{ total }}</td>
+        </tfoot>
+        <tbody>
+            {% for transaction in account_transactions_list %}
+            <tr>
+                <td><a href="/transaction/{{ transaction['transaction_id'] }}">{{ transaction["date"] }}</a></td>
+                <td>{{ transaction["payee"] }}</td>
+                <td>{{ transaction["amount"] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form action="/add_transaction" method="POST">
+        <input autocomplete="off" placeholder="Date" name="date" type="text">
+        <label for="date">date</label>
+        <!-- Rozwijane menu, ale z mozliwoscia wpisanie i podpowiadanie ?  -->
+        <input autocomplete="off" placeholder="Payee" name="payee" type="text">
+        <label for="payee">Payee</label>
+        <input autocomplete="off" placeholder="Withdrawal or deposit" name="transaction_type" type="text">
+        <label for="transaction_type">Transaction type</label>
+        <!-- dodac mozlwiosc transferu miedzy kontami -->
+        <input autocomplete="off" placeholder="0" name="amount" type="text" step="0.01">
+        <label for="amount">Amount</label>
+        <!-- Dodać podkategorie -->
+        <input autocomplete="off" placeholder="Category" name="category" type="text">
+        <label for="category">Category</label>
+        <button type="submit">Add transaction</button>
+    </form>
+    
+
+{% endblock %}

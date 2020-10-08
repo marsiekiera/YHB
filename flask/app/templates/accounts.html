@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Accounts
+{% endblock %}
+
+{% block main %}
+    <h1>Accounts</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Account</th>
+                <th>Balance</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <td>Total</td>
+            <td>{{ total }}</td>
+        </tfoot>
+        <tbody>
+            {% for acc in user_accounts_list %}
+            <tr>
+                <td><a href="/account/{{ acc['account_name'] }}">{{ acc["account_name"] }}</a></td>
+                <td>{{ acc["balance"] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
