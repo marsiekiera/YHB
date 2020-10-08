@@ -138,6 +138,40 @@ def logout():
     return redirect("/")
 
 
+@app.route("/accounts")
+@login_required
+def accounts():
+    user_id = session["user_id"]
+    total = 0
+    user_accounts_list = []
+    with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
+        cur = con.cursor()
+
+        cur.execute("SELECT * FROM account WHERE user_id = ? ORDER BY account_name", (user_id,))
+        user_accounts = cur.fetchall()
+
+        if not user_accounts:
+            flash("You don't have any account", 'error')
+            return redirect("/")
+        
+        for acc in user_accounts:
+            account_dict = {}
+            for row in acc:
+                account_dict["account_id"] = acc[0]
+                account_dict["account_name"] = acc[1]
+                account_dict["balance"] = acc[3]
+                account_dict["account_hide"] = acc[4]
+            total += account_dict["balance"]
+            user_accounts_list.append(account_dict)
+
+        # Need to add actual balance instead starting balance. First I need add module add_transaction and create history.
+
+    con.close()
+
+    return render_template("accounts.html", user_accounts_list=user_accounts_list, total=total)
+
+
 @app.route("/add_account", methods=["POST", "GET"])
 @login_required
 def add_account():
@@ -172,6 +206,17 @@ def add_account():
     else:
         return render_template("add_account.html")
 
+@app.route("/account/<account_name>")
+def account(account_name):
+    print(account_name)
+
+
+    return render_template("account.html", account_name=account_name)
+
+
+@app.route("/transaction/<transaction_id>")
+def transaction(transaction_id):
+    return redirect("/")
 
 
 @app.route("/edit_account", methods=["POST", "GET"])
