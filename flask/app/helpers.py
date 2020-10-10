@@ -20,3 +20,16 @@ def check_password(input_string):
         return True
     else:
         return False
+
+
+def only_digit(input_string):
+    dots = 0
+    for letter in input_string:
+        if not letter.isdigit():
+            return False
+        elif letter in (".", ","):
+            dots += 1
+    if dots > 1:
+        return False        
+    else:
+        return True
