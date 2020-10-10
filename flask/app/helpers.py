@@ -25,10 +25,10 @@ def check_password(input_string):
 def only_digit(input_string):
     dots = 0
     for letter in input_string:
-        if not letter.isdigit():
-            return False
-        elif letter in (".", ","):
+        if letter in (".", ","):
             dots += 1
+        elif not letter.isdigit():
+            return False
     if dots > 1:
         return False        
     else:
