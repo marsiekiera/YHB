@@ -11,20 +11,22 @@
             <tr>
                 <th>Date</th>
                 <th>Payee</th>
+                <th>Category</th>
                 <th>Amount</th>
                 <!-- add <th>Balance</th> in future-->
             </tr>
         </thead>
         <tfoot>
-            <td colspan="2">Ending balance</td>
+            <td colspan="3">Ending balance</td>
             <td>{{ total }}</td>
         </tfoot>
         <tbody>
-            {% for transaction in account_transactions_list %}
+            {% for tran in trans_list_dict %}
             <tr>
-                <td><a href="/transaction/{{ transaction['transaction_id'] }}">{{ transaction["date"] }}</a></td>
-                <td>{{ transaction["payee"] }}</td>
-                <td>{{ transaction["amount"] }}</td>
+                <td><a href="/transaction/{{ tran['transaction_id'] }}">{{ tran["date"] }}</a></td>
+                <td>{{ tran["payee_name"] }}</td>
+                <td>{{ tran["category_name"] }}</td>
+                <td>{{ tran["amount"] }}</td>
             </tr>
             {% endfor %}
         </tbody>
