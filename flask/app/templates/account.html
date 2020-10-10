@@ -31,20 +31,42 @@
     </table>
 
     <form action="/add_transaction" method="POST">
-        <input autocomplete="off" placeholder="Date" name="date" type="text">
+        <input name="date" type="date" value="{{ today }}" step="1" min="2000-01-01">
         <label for="date">date</label>
-        <!-- Rozwijane menu, ale z mozliwoscia wpisanie i podpowiadanie ?  -->
-        <input autocomplete="off" placeholder="Payee" name="payee" type="text">
-        <label for="payee">Payee</label>
-        <input autocomplete="off" placeholder="Withdrawal or deposit" name="transaction_type" type="text">
+
+        <select name="transaction_type" type="number">
+            <option value="-1" selected>Withdrawal</option>
+            <option value="1">Deposit</option>
+        </select>
         <label for="transaction_type">Transaction type</label>
-        <!-- dodac mozlwiosc transferu miedzy kontami -->
-        <input autocomplete="off" placeholder="0" name="amount" type="text" step="0.01">
-        <label for="amount">Amount</label>
+
+        <!-- Narazie rozwijane menu z wcześniej dodanymi,
+        później dodać możliwość wpisania nowego -->
+        <select name="payee" autofocus type="text">
+            <option value="" disabled selected>Payee</option>
+            {% for dict in payee_list_dict %}
+                <option value="{{ dict['payee_name'] }}">{{ dict['payee_name'] }}</option>
+            {% endfor %}
+        </select>
+        <label for="payee">Payee</label>
+
         <!-- Dodać podkategorie -->
-        <input autocomplete="off" placeholder="Category" name="category" type="text">
+        <select name="category" type="text">
+            <option value="" disabled selected>Category</option>
+            {% for dict in category_list_dict %}
+                <option value="{{ dict['category_name'] }}">{{ dict['category_name'] }}</option>
+            {% endfor %}
+        </select>
         <label for="category">Category</label>
+        
+
+        <!-- dodac mozlwiosc transferu miedzy kontami -->
+        <input autocomplete="off" placeholder="0,00 or 0.00" name="amount" type="text">
+        <label for="amount">Amount</label>
+
+
         <button type="submit">Add transaction</button>
+
     </form>
     
 
