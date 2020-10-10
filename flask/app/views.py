@@ -218,17 +218,14 @@ def account(account_name):
     payee_list_dict = []
     # user's category list of dict
     category_list_dict = []
-
+    # user's transaction list of dict
+    trans_list_dict = []
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         # create session account id
         cur.execute("""SELECT account_id FROM account WHERE user_id = ? 
             AND account_name = ?""", (user_id, account_name))
-
         session["account_id"] = cur.fetchone()[0]
-        print(session["account_id"])
-
-
         # create user's payee list of dict
         cur.execute("""SELECT * FROM payee WHERE user_id = ? 
             ORDER BY payee_name""",(user_id,))
@@ -255,72 +252,69 @@ def account(account_name):
             category_dict["category_name"] = category[1]
             category_dict["user_id"] = category[2]
             category_list_dict.append(category_dict)
+        # create user's transactions list of dict
+        cur.execute("""SELECT * FROM transactions WHERE user_id = ?
+        AND account_id = ? ORDER BY date""", (user_id, session["account_id"]))
+        trans_db = cur.fetchall()
+        total = 0
+        for tran in trans_db:
+            tran_dict = {}
+            tran_dict["transaction_id"] = tran[0]
+            tran_dict["date"] = tran[1]
+            tran_dict["payee_id"] = tran[2]
+            for pay in payee_list_dict:
+                print(f'pay { pay["payee_id"] }')
+                print(f'tran { tran[2] }')
+                if pay["payee_id"] == tran[2]:
+                    tran_dict["payee_name"] = pay["payee_name"]
+            tran_dict["category_id"] = tran[3]
+            for cat in category_list_dict:
+                if cat["category_id"] == tran[3]:
+                    tran_dict["category_name"] = cat["category_name"]
+            tran_dict["amount"] = tran[4]
+            total += tran[4]
+            tran_dict["user_id"] = tran[5]
+            tran_dict["account_id"] = tran[6]
+            trans_list_dict.append(tran_dict)
     con.close()
 
     return render_template("account.html", account_name=account_name, 
-        today=today, payee_list_dict=payee_list_dict, 
-        category_list_dict=category_list_dict)
+        today=today, payee_list_dict=payee_list_dict, total=total,
+        category_list_dict=category_list_dict, trans_list_dict=trans_list_dict)
 
 
 @app.route("/add_transaction", methods=["POST"])
 @login_required
 def add_transaction():
-
     user_id = session["user_id"]
     account_id = session["account_id"]
-    date_form = request.form.get("date")
-
-    # Amount
+    # amount
     amount_form = request.form.get("amount")
     trans_type = int(request.form.get("transaction_type"))
+    print(amount_form)
     if not only_digit(amount_form):
         flash("Amount incorrect", 'error')
         return redirect(f"/account/{ session['account_name'] }")
     amount = round(float(amount_form.replace(',','.')), 2) * trans_type
-
-
-    payee_name = request.form.get("payee")
-    category_name = request.form.get("category")
-
+    # connect with database
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
-
+        # select payee_id from db
         cur.execute("""SELECT payee_id FROM payee WHERE user_id = ? 
-            AND payee_name = ?""", (user_id, payee_name))
+            AND payee_name = ?""", (user_id, request.form.get("payee")))
         payee_id = cur.fetchone()[0]
-
+        # selecy category_id from db
         cur.execute("""SELECT category_id FROM category WHERE user_id = ? 
-            AND category_name = ?""", (user_id, category_name))
+            AND category_name = ?""", (user_id, request.form.get("category")))
         category_id = cur.fetchone()[0]
-
-
-
-
-        # cur.execute("""INSERT INTO transactions 
-        #             (date, payee_id, category_id, amount, user_id, account_id)
-        #             VALUES (?, ?, ?, ?, ?, ?)
-        #             """, (date, payee_id, category_id, amount, user_id, account_id))
+        # insert transaction to db
+        cur.execute("""INSERT INTO transactions 
+            (date, payee_id, category_id, amount, user_id, account_id)
+            VALUES (?, ?, ?, ?, ?, ?)""", (request.form.get("date"), payee_id,
+            category_id, amount, user_id, account_id))
+        con.commit()      
     con.close()
-
-
-
-
-    # TESTING
-    print(f"date_form {date_form}")
-    print(f"payee_name {payee_name}")
-    print(f"amount_form {amount_form}")
-    print(f"transaction type {transaction_type}")
-    print(f"transaction type type {type(transaction_type)}")
-    # amount_form = request.form.get("amount") * transaction_type
-    print(f"amount {amount}")
-    print(f"category name {category_name}")
-    # TESTING
-
-
-
-    # # date
-    
-
+    flash("Transaction sucessfully added", "info")
     return redirect(f"/account/{ session['account_name'] }")
 
 
@@ -362,17 +356,18 @@ def categories():
             con.row_factory = sql.Row
             cur = con.cursor()
 
-            cur.execute("""SELECT category_id FROM category 
-                        WHERE category_name = ? AND user_id = ?""", (category, user_id))
+            cur.execute("""SELECT category_id FROM category WHERE 
+            category_name = ? AND user_id = ?""", (category, user_id))
             category_id = cur.fetchone()
             
-
             if not category_id:
                 # Add new category to database
-                cur.execute("INSERT INTO category (category_name, user_id) VALUES (?, ?)", (category, user_id))
+                cur.execute("""INSERT INTO category (category_name, user_id) 
+                    VALUES (?, ?)""", (category, user_id))
                 con.commit()
                 cur.execute("""SELECT category_id FROM category 
-                            WHERE category_name = ? AND user_id = ?""", (category, user_id))
+                    WHERE category_name = ? AND user_id = ?""", 
+                    (category, user_id))
                 category_id = cur.fetchone()
                 print(f"category_id = { category_id }")
         con.close()
