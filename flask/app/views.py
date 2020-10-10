@@ -263,8 +263,6 @@ def account(account_name):
             tran_dict["date"] = tran[1]
             tran_dict["payee_id"] = tran[2]
             for pay in payee_list_dict:
-                print(f'pay { pay["payee_id"] }')
-                print(f'tran { tran[2] }')
                 if pay["payee_id"] == tran[2]:
                     tran_dict["payee_name"] = pay["payee_name"]
             tran_dict["category_id"] = tran[3]
