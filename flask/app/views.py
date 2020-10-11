@@ -19,6 +19,7 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
+
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
@@ -28,10 +29,9 @@ app.config["SESSION_TYPE"] = "filesystem"
 @app.route("/")
 @login_required
 def index():
-    """Show Account list"""
+    """Homepage"""
     # Use os.getenv("key") to get environment variables
     app_name = os.getenv("YHB")
-
     return render_template("index.html")
 
 
@@ -40,43 +40,37 @@ def login():
     """Log user in"""
     # Forget any user_id
     session.clear()
-
     if request.method == "POST":
         # connect with database
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
             user_name = str.lower(request.form.get("user_name"))
-
             if not user_name:
-                flash('Please provide User Name', 'error')
+                flash("Please provide User Name", "error")
                 return redirect("/login")
-            
-            cur.execute("SELECT * FROM users WHERE user_name = ?", (user_name,))
+            cur.execute(
+                "SELECT * FROM users WHERE user_name = ?", (user_name,))
             records = cur.fetchall()
-
             # Check in database if user exists
             if not records:
-                flash('Incorrect user name', 'error')
+                flash("Incorrect user name", "error")
                 return redirect("/login")
-
             for row in records:
                 user_id = row[0]
                 user_name = row[1]
                 hash_password = row[2]
-            
             # Check correctness of password
-            if not check_password_hash(hash_password, request.form.get("password")):
-                flash('Incorrect password', 'error')
+            if not check_password_hash(hash_password, 
+                                       request.form.get("password")):
+                flash("Incorrect password", "error")
                 return redirect("/login")
-            
             # Remember which user has logged in
             session["user_id"] = user_id
             session["user_name"] = user_name
-
         con.close()
 
-        flash("You were successfully logged in", 'info')
+        flash("You were successfully logged in", "info")
         return redirect("/")
     else:
         return render_template("login.html")
@@ -91,37 +85,38 @@ def register():
             con.row_factory = sql.Row
             cur = con.cursor()
             user_name = str.lower(request.form.get("user_name"))
-
             if not user_name:
-                flash('Please provide User Name', 'error')
+                flash("Please provide User Name", "error")
                 return redirect("/register")
-
             # Check in database if user already exists
-            cur.execute("SELECT * FROM users WHERE user_name = ?", (user_name,))
+            cur.execute("SELECT * FROM users WHERE user_name = ?", 
+                        (user_name,))
             if cur.fetchone():
-                flash('User already exists', 'error')
+                flash("User already exists", "error")
                 return redirect("/register")
-
             # Check correctness of password
             if not request.form.get("password"):
-                flash('Please provide password', 'error')
+                flash("Please provide password", "error")
                 return redirect("/register")
-            elif not request.form.get("re_password") or request.form.get("password") != request.form.get("re_password"):
-                flash('Please re-type the same password', 'error')
+            elif not (request.form.get("re_password") or 
+                     request.form.get("password") != 
+                     request.form.get("re_password")):
+                flash("Please re-type the same password", "error")
                 return redirect("/register")
             elif not check_password(request.form.get("password")):
-                flash('Please provide password with at least one uppercase and lowercase letter, a number and a symbol.', 'error')
+                flash(
+                    """Please provide password with at least one uppercase and 
+                    lowercase letter, a number and a symbol.""", "error")
                 return redirect("/register")
-            
             # Create hash password
-            hash_password = generate_password_hash(request.form.get("password"))
-
+            hash_password = generate_password_hash(
+                request.form.get("password"))
             # Add user to database
-            cur.execute("INSERT INTO users (user_name, hash) VALUES (?, ?)", (user_name, hash_password))
+            cur.execute("INSERT INTO users (user_name, hash) VALUES (?, ?)", 
+                        (user_name, hash_password))
             con.commit()
-
         con.close()
-        flash('You have sucessfully register. You can login now.', 'info')
+        flash("You have sucessfully register. You can login now.", "info")
         return redirect("/login")
     else:
         return render_template("register.html")
@@ -130,32 +125,29 @@ def register():
 @app.route("/logout")
 def logout():
     """Log user out"""
-
     # Forget any user_id
     session.clear()
-
-    # Redirect user to login form
-    flash("You have been successfully logged out.", 'info')
+    flash("You have been successfully logged out.", "info")
     return redirect("/")
 
 
 @app.route("/accounts")
 @login_required
 def accounts():
+    """List of all accounts and balance"""
     user_id = session["user_id"]
     total = 0
     user_accounts_list = []
     with sql.connect("sqlite.db") as con:
-        con.row_factory = sql.Row
         cur = con.cursor()
-
-        cur.execute("SELECT * FROM account WHERE user_id = ? ORDER BY account_name", (user_id,))
+        cur.execute(
+            "SELECT * FROM account WHERE user_id = ? ORDER BY account_name", 
+            (user_id,))
         user_accounts = cur.fetchall()
-
         if not user_accounts:
-            flash("You don't have any account", 'error')
+            flash("You don't have any account", "error")
             return redirect("/")
-        
+
         for acc in user_accounts:
             account_dict = {}
             for row in acc:
@@ -165,52 +157,52 @@ def accounts():
                 account_dict["account_hide"] = acc[4]
             total += account_dict["balance"]
             user_accounts_list.append(account_dict)
-
-        # Need to add actual balance instead starting balance. First I need add module add_transaction and create history.
-
     con.close()
 
-    return render_template("accounts.html", user_accounts_list=user_accounts_list, total=total)
+    return render_template(
+        "accounts.html", user_accounts_list=user_accounts_list, total=total)
 
 
 @app.route("/add_account", methods=["POST", "GET"])
 @login_required
 def add_account():
-    """Create new users account"""
+    """Create new user's account"""
     if request.method == "POST":
         # connect with database
         with sql.connect("sqlite.db") as con:
-            con.row_factory = sql.Row
             cur = con.cursor()
-
             user_id = session["user_id"]
             account_name = request.form.get("account_name")
-
             # Check in database if user already have account with that name
-            cur.execute("SELECT * FROM account WHERE user_id = ? AND account_name = ?", (user_id, account_name))
+            cur.execute(
+                "SELECT * FROM account WHERE user_id = ? AND account_name = ?",
+                (user_id, account_name))
             if cur.fetchone():
-                flash('You already have an account with that name', 'error')
+                flash("You already have an account with that name", "error")
                 return redirect("/add_account")
-
             if not request.form.get("starting_balance"):
                 starting_balance = 0.00
             else:
-                starting_balance = round(float(request.form.get("starting_balance").replace(',','.')), 2)
-
+                starting_balance = round(float(
+                    request.form.get("starting_balance").replace(',','.')), 2)
             # Add new user's account to database
-            cur.execute("""INSERT INTO account (account_name, user_id, starting_balance) 
-                        VALUES (?, ?, ?)""", (account_name, user_id, starting_balance))
+            cur.execute(
+                """INSERT INTO account 
+                (account_name, user_id, starting_balance) VALUES (?, ?, ?)""", 
+                (account_name, user_id, starting_balance))
             con.commit()  
         con.close()
 
-        flash('You have sucessfully add new account', "info")
+        flash("You have sucessfully add new account", "info")
         return redirect("/")
     else:
         return render_template("add_account.html")
 
+
 @app.route("/account/<account_name>")
 @login_required
 def account(account_name):
+    """ List of all transactions in the account"""
     user_id = session["user_id"]
     session["account_name"] = account_name
     today = datetime.now().strftime('%Y-%m-%d')
@@ -253,8 +245,9 @@ def account(account_name):
             category_dict["user_id"] = category[2]
             category_list_dict.append(category_dict)
         # create user's transactions list of dict
-        cur.execute("""SELECT * FROM transactions WHERE user_id = ?
-        AND account_id = ? ORDER BY date""", (user_id, session["account_id"]))
+        cur.execute(
+            """SELECT * FROM transactions WHERE user_id = ? AND account_id = ? 
+            ORDER BY date""", (user_id, session["account_id"]))
         trans_db = cur.fetchall()
         total = 0
         for tran in trans_db:
@@ -270,7 +263,7 @@ def account(account_name):
                 if cat["category_id"] == tran[3]:
                     tran_dict["category_name"] = cat["category_name"]
             tran_dict["amount"] = tran[4]
-            total += tran[4]
+            total = round(float(total + tran[4]), 2)
             tran_dict["user_id"] = tran[5]
             tran_dict["account_id"] = tran[6]
             trans_list_dict.append(tran_dict)
@@ -286,15 +279,15 @@ def account(account_name):
 def add_transaction():
     user_id = session["user_id"]
     account_id = session["account_id"]
-    # amount
+    # Amount
     amount_form = request.form.get("amount")
     trans_type = int(request.form.get("transaction_type"))
     print(amount_form)
     if not only_digit(amount_form):
-        flash("Amount incorrect", 'error')
+        flash("Amount incorrect", "error")
         return redirect(f"/account/{ session['account_name'] }")
     amount = round(float(amount_form.replace(',','.')), 2) * trans_type
-    # connect with database
+    # Connect with database
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         # select payee_id from db
@@ -330,7 +323,7 @@ def add_transaction():
 def edit_account():
     if request.method == "POST":
         # to do
-        flash('Changes saved', "info")
+        flash("Changes saved", "info")
         return redirect("/")
     else:
         return render_template("edit_account.html")
@@ -369,7 +362,6 @@ def categories():
                 category_id = cur.fetchone()
                 print(f"category_id = { category_id }")
         con.close()
-
 
     else:
         return redirect("/")
