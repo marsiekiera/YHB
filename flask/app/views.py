@@ -271,6 +271,7 @@ def add_transaction():
 def transaction(transaction_id):
     """Edit transaction"""
     if request.method == "POST":
+        # to do
         return render_template("transaction.html")
     else:
         user_id = session["user_id"]
@@ -280,11 +281,9 @@ def transaction(transaction_id):
 
         with sql.connect("sqlite.db") as con:
             cur = con.cursor()
-
             cur.execute(
                 "SELECT * FROM transactions WHERE transaction_id = ?", 
                 (transaction_id,))
-            
             transaction_db = cur.fetchone()
             if (not transaction_db 
                 or transaction_id != transaction_db[0] 
@@ -298,11 +297,16 @@ def transaction(transaction_id):
             category_id = transaction_db[3]
             amount = transaction_db[4]
             account_id = transaction_db[6]
-
             if amount > 0:
                 tran_type = "Deposit"
             else:
                 tran_type = "Withdrawal"
+                amount *= -1
+
+            # user's payee list of dict using payee_list function
+            payee_list_dict = payee_list_from_db(user_id, cur)
+            # user's category list of dict using category_list function
+            category_list_dict = category_list_from_db(user_id, cur)
             
             cur.execute("SELECT payee_name FROM payee WHERE payee_id = ?",
                         (payee_id,))
@@ -316,9 +320,10 @@ def transaction(transaction_id):
         return render_template(
             "transaction.html", date=date, tran_type=tran_type, 
             payee_name=payee_name, category_name=category_name, amount=amount,
-            transaction_id=transaction_id)
+            transaction_id=transaction_id, payee_list_dict=payee_list_dict,
+            category_list_dict=category_list_dict)
 
-
+# to do
 @app.route("/edit_account", methods=["POST", "GET"])
 @login_required
 def edit_account():
@@ -329,6 +334,7 @@ def edit_account():
     else:
         return render_template("edit_account.html")
 
+# to do
 @app.route("/payees", methods=["POST", "GET"])
 @login_required
 def payees():
@@ -338,6 +344,7 @@ def payees():
     else:
         return redirect("/")
 
+# to do
 @app.route("/categories", methods=["POST", "GET"])
 @login_required
 def categories():
