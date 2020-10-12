@@ -6,7 +6,8 @@ import sqlite3 as sql
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
 
-from app.helpers import check_password, login_required, only_digit
+from app.helpers import (check_password, login_required, only_digit, 
+    payee_list_from_db, category_list_from_db, transaction_list_from_db)
 
 # Templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -206,67 +207,23 @@ def account(account_name):
     user_id = session["user_id"]
     session["account_name"] = account_name
     today = datetime.now().strftime('%Y-%m-%d')
-    # user's payee list of dict
-    payee_list_dict = []
-    # user's category list of dict
-    category_list_dict = []
-    # user's transaction list of dict
-    trans_list_dict = []
+
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         # create session account id
         cur.execute("""SELECT account_id FROM account WHERE user_id = ? 
             AND account_name = ?""", (user_id, account_name))
         session["account_id"] = cur.fetchone()[0]
-        # create user's payee list of dict
-        cur.execute("""SELECT * FROM payee WHERE user_id = ? 
-            ORDER BY payee_name""",(user_id,))
-        payee_db = cur.fetchall()
-        if not payee_db:
-            flash("You need to add payee before", 'error')
-            return redirect("/payees")
-        for pay in payee_db:
-            payee_dict = {}
-            payee_dict["payee_id"] = pay[0]
-            payee_dict["payee_name"] = pay[1]
-            payee_dict["user_id"] = pay[2]
-            payee_list_dict.append(payee_dict)
-        # create user's category list of dict
-        cur.execute("""SELECT * FROM category WHERE user_id = ? 
-            ORDER BY category_name""", (user_id,))
-        category_db = cur.fetchall()
-        if not category_db:
-            flash("You need to add category before", "error")
-            return redirect("/categories")
-        for category in category_db:
-            category_dict = {}
-            category_dict["category_id"] = category[0]
-            category_dict["category_name"] = category[1]
-            category_dict["user_id"] = category[2]
-            category_list_dict.append(category_dict)
-        # create user's transactions list of dict
-        cur.execute(
-            """SELECT * FROM transactions WHERE user_id = ? AND account_id = ? 
-            ORDER BY date""", (user_id, session["account_id"]))
-        trans_db = cur.fetchall()
-        total = 0
-        for tran in trans_db:
-            tran_dict = {}
-            tran_dict["transaction_id"] = tran[0]
-            tran_dict["date"] = tran[1]
-            tran_dict["payee_id"] = tran[2]
-            for pay in payee_list_dict:
-                if pay["payee_id"] == tran[2]:
-                    tran_dict["payee_name"] = pay["payee_name"]
-            tran_dict["category_id"] = tran[3]
-            for cat in category_list_dict:
-                if cat["category_id"] == tran[3]:
-                    tran_dict["category_name"] = cat["category_name"]
-            tran_dict["amount"] = tran[4]
-            total = round(float(total + tran[4]), 2)
-            tran_dict["user_id"] = tran[5]
-            tran_dict["account_id"] = tran[6]
-            trans_list_dict.append(tran_dict)
+        # user's payee list of dict using payee_list function
+        payee_list_dict = payee_list_from_db(user_id, cur)
+        # user's category list of dict using category_list function
+        category_list_dict = category_list_from_db(user_id, cur)
+        # user's transactions list of dict using transaction_list function
+        trans_list_dict_db = transaction_list_from_db(user_id, cur, 
+                                                      payee_list_dict, 
+                                                      category_list_dict)
+        trans_list_dict = trans_list_dict_db[0]
+        total = trans_list_dict_db[1]
     con.close()
 
     return render_template("account.html", account_name=account_name, 
