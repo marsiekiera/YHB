@@ -23,30 +23,40 @@
         <label for="transaction_type">Transaction type</label>
 
         <select name="payee" autofocus type="text">
-            <option value="{{ payee_name }}" selected>{{ payee_name }}</option>
             {% for dict in payee_list_dict %}
-                <option value="{{ dict['payee_name'] }}">
-                    {{ dict['payee_name'] }}
-                </option>
+                {% if dict['payee_name'] == payee_name %}
+                    <option value="{{ dict['payee_name'] }}" selected>
+                        {{ dict['payee_name'] }}
+                    </option>
+                {% else %}
+                    <option value="{{ dict['payee_name'] }}">
+                        {{ dict['payee_name'] }}
+                    </option>
+                {% endif %}
             {% endfor %}
         </select>
         <label for="payee">Payee</label>
 
         <select name="category" type="text">
-            <option value="" disabled selected>Category</option>
             {% for dict in category_list_dict %}
-                <option value="{{ dict['category_name'] }}">
-                    {{ dict['category_name'] }}
-                </option>
+                {% if dict['category_name'] == category_name %}
+                    <option value="{{ dict['category_name'] }}" selected>
+                        {{ dict['category_name'] }}
+                    </option>
+                {% else %}
+                    <option value="{{ dict['category_name'] }}">
+                        {{ dict['category_name'] }}
+                    </option>
+                {% endif %}
             {% endfor %}
         </select>
         <label for="category">Category</label>
         
         <input autocomplete="off" placeholder="0,00 or 0.00" 
-            name="amount" type="text">
+            name="amount" type="text" value="{{ amount }}">
         <label for="amount">Amount</label>
 
-        <button type="submit">Add transaction</button>
+        <button type="submit">Save transaction</button>
     </form>
     
 {% endblock %}
