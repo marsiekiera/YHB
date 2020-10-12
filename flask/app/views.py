@@ -236,7 +236,7 @@ def account(account_name):
             ORDER BY category_name""", (user_id,))
         category_db = cur.fetchall()
         if not category_db:
-            flash("You need to add category before", 'error')
+            flash("You need to add category before", "error")
             return redirect("/categories")
         for category in category_db:
             category_dict = {}
@@ -309,13 +309,57 @@ def add_transaction():
     return redirect(f"/account/{ session['account_name'] }")
 
 
-# @app.route("/transaction/<transaction_id>", method=["POST", "GET"])
-# @login_required
-# def transaction(transaction_id):
-#     if request.method == "POST":
-#         return render_template("transaction.html")
-#     else:
-#         return redirect("/")
+@app.route("/transaction/<transaction_id>", methods=["POST", "GET"])
+@login_required
+def transaction(transaction_id):
+    """Edit transaction"""
+    if request.method == "POST":
+        return render_template("transaction.html")
+    else:
+        user_id = session["user_id"]
+        account_name = session["account_name"]
+        account_id = session["account_id"]
+        transaction_id = int(transaction_id)
+
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+
+            cur.execute(
+                "SELECT * FROM transactions WHERE transaction_id = ?", 
+                (transaction_id,))
+            
+            transaction_db = cur.fetchone()
+            if (not transaction_db 
+                or transaction_id != transaction_db[0] 
+                or user_id != transaction_db[5] 
+                or account_id != transaction_db[6]):
+                flash("Database error. Contact with admin", "error")
+                return redirect("/")
+
+            date = transaction_db[1]
+            payee_id = transaction_db[2]
+            category_id = transaction_db[3]
+            amount = transaction_db[4]
+            account_id = transaction_db[6]
+
+            if amount > 0:
+                tran_type = "Deposit"
+            else:
+                tran_type = "Withdrawal"
+            
+            cur.execute("SELECT payee_name FROM payee WHERE payee_id = ?",
+                        (payee_id,))
+            payee_name = cur.fetchone()[0]
+
+            cur.execute(
+                "SELECT category_name FROM category WHERE category_id = ?",
+                (category_id,))
+            category_name = cur.fetchone()[0]
+
+        return render_template(
+            "transaction.html", date=date, tran_type=tran_type, 
+            payee_name=payee_name, category_name=category_name, amount=amount,
+            transaction_id=transaction_id)
 
 
 @app.route("/edit_account", methods=["POST", "GET"])
