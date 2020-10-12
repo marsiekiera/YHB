@@ -6,19 +6,47 @@
 
 {% block main %}
     <h1>Edit transaction</h1>
- 
-    <form action="/edit_transaction" method="POST">
-        <input autocomplete="off" placeholder="Date" name="date" type="date" value="{{ tran_date }}">
+    
+    <form action="/transaction/{{ transaction_id }}" method="POST">
+        <input name="date" type="date" value="{{ date }}" min="2000-01-01">
         <label for="date">date</label>
-        <input autocomplete="off" placeholder="Payee" name="payee" type="text" value="{{ tran_payee }}">
-        <label for="payee">Payee</label>
-        <input autocomplete="off" placeholder="Withdrawal or deposit" name="transaction_type" type="text" value="{{ tran_type }}">
+
+        <select name="transaction_type" type="number">
+            {% if tran_type == "Withdrawal" %}
+            <option value="-1" selected>Withdrawal</option>
+            <option value="1">Deposit</option>
+            {% else %}
+            <option value="-1">Withdrawal</option>
+            <option value="1" selected>Deposit</option>
+            {% endif %}
+        </select>
         <label for="transaction_type">Transaction type</label>
-        <input autocomplete="off" placeholder="0" name="amount" type="text" value="{{ tran_amount }}">
-        <label for="amount">Amount</label>
-        <input autocomplete="off" placeholder="Category" name="category" type="text" value="{{ tran_category }}">
+
+        <select name="payee" autofocus type="text">
+            <option value="{{ payee_name }}" selected>{{ payee_name }}</option>
+            {% for dict in payee_list_dict %}
+                <option value="{{ dict['payee_name'] }}">
+                    {{ dict['payee_name'] }}
+                </option>
+            {% endfor %}
+        </select>
+        <label for="payee">Payee</label>
+
+        <select name="category" type="text">
+            <option value="" disabled selected>Category</option>
+            {% for dict in category_list_dict %}
+                <option value="{{ dict['category_name'] }}">
+                    {{ dict['category_name'] }}
+                </option>
+            {% endfor %}
+        </select>
         <label for="category">Category</label>
-        <button type="submit">Edit transaction</button>
+        
+        <input autocomplete="off" placeholder="0,00 or 0.00" 
+            name="amount" type="text">
+        <label for="amount">Amount</label>
+
+        <button type="submit">Add transaction</button>
     </form>
     
 {% endblock %}
