@@ -1,5 +1,7 @@
 * {
-    background-color: gray;
+    background-color: #ccc;
+    margin: 0;
+    padding: 0;
 }
 
 .error {
@@ -10,3 +12,32 @@
 .info {
     background-color: green;
 }
+
+table {
+    width: 576px; /* 140px * 4 column + 16px scrollbar width */
+    border-spacing: 0;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+tbody, tfoot tr, thead tr { display: block; }
+
+tbody {
+    height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+tbody td, thead th, tfoot td {
+    width: 140px;
+}
+
+thead th:last-child, tfoot td:last-child {
+    width: 156px; /* 140px + 16px scrollbar width */
+}
+
+th, td {
+    border-spacing: 0; 
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
