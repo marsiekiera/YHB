@@ -98,3 +98,23 @@ def transaction_list_from_db(
         tran_dict["account_id"] = tran[6]
         trans_list_dict.append(tran_dict)
     return [trans_list_dict, total]
+
+
+def account_list_from_db(user_id, cur):
+    """Create user's category list of dict"""
+    account_list_dict = []
+    cur.execute("""SELECT * FROM account WHERE user_id = ? 
+        ORDER BY account_name""", (user_id,))
+    account_db = cur.fetchall()
+    if not account_db:
+        flash("You need to add category before", "error")
+        return redirect("/add_account")
+    for acc in account_db:
+        account_dict = {}
+        account_dict["account_id"] = acc[0]
+        account_dict["account_name"] = acc[1]
+        account_dict["user_id"] = acc[2]
+        account_dict["starting_balance"] = acc[3]
+        account_dict["account_hide"] = acc[4]
+        account_list_dict.append(account_dict)
+    return account_list_dict

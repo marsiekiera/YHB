@@ -7,7 +7,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
 
 from app.helpers import (check_password, login_required, only_digit, 
-    payee_list_from_db, category_list_from_db, transaction_list_from_db)
+    payee_list_from_db, category_list_from_db, transaction_list_from_db,
+    account_list_from_db)
 
 # Templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -271,6 +272,7 @@ def add_transaction():
 def transaction(transaction_id):
     """Edit transaction"""
     if request.method == "POST":
+        # możliwość zmiany konta?
         # to do
         return render_template("transaction.html")
     else:
@@ -307,6 +309,8 @@ def transaction(transaction_id):
             payee_list_dict = payee_list_from_db(user_id, cur)
             # user's category list of dict using category_list function
             category_list_dict = category_list_from_db(user_id, cur)
+            # user's accounts list of dict using account_list function
+            account_list_dict = account_list_from_db(user_id, cur)
             
             cur.execute("SELECT payee_name FROM payee WHERE payee_id = ?",
                         (payee_id,))
@@ -318,10 +322,11 @@ def transaction(transaction_id):
             category_name = cur.fetchone()[0]
 
         return render_template(
-            "transaction.html", date=date, tran_type=tran_type, 
-            payee_name=payee_name, category_name=category_name, amount=amount,
-            transaction_id=transaction_id, payee_list_dict=payee_list_dict,
-            category_list_dict=category_list_dict)
+            "transaction.html", date=date, tran_type=tran_type, amount=amount,
+            transaction_id=transaction_id, 
+            payee_list_dict=payee_list_dict, payee_name=payee_name, 
+            category_list_dict=category_list_dict, category_name=category_name,
+            account_list_dict=account_list_dict, account_name=account_name)
 
 # to do
 @app.route("/edit_account", methods=["POST", "GET"])

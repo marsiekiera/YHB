@@ -11,6 +11,20 @@
         <input name="date" type="date" value="{{ date }}" min="2000-01-01">
         <label for="date">date</label>
 
+        <select name="account" type="text">
+            {% for acc in account_list_dict %}
+                {% if acc['account_name'] == account_name %}
+                    <option value="{{ acc['account_name'] }}" selected>
+                        {{ acc['account_name'] }}
+                    </option>
+                {% else %}
+                    <option value="{{ acc['account_name'] }}">
+                        {{ acc['account_name'] }}
+                    </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+
         <select name="transaction_type" type="number">
             {% if tran_type == "Withdrawal" %}
             <option value="-1" selected>Withdrawal</option>
