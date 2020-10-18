@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Edit account
+{% endblock %}
+
+{% block main %}
+    <h1>Edit account</h1>
+
+    <form action="/edit_account/{{ account_name }}" method="POST">
+
+        <input autocomplete="off" placeholder="Account name" 
+            name="account_name" type="text" value="{{ account_name }}">
+        <label for="account_name">Account name</label>
+
+        <input autocomplete="off" placeholder="0" name="starting_balance" 
+        type="text" value="{{ starting_balance }}">
+        <label for="starting_balance">Starting balance</label>
+        
+        {% if account_hide == 0 %}
+        <input type="checkbox" name="account_hide">
+        {% else %}
+        <input type="checkbox" name="account_hide" checked>
+        {% endif %}
+        <label for="account_hide">Hide account</label>
+
+        <button type="submit">Save changes</button>
+    </form>
+
+    <form action="/account/{{ account_name }}">
+        <button type="submit">Cancel</button>
+    </form>
+
+{% endblock %}
