@@ -6,6 +6,11 @@
 
 {% block main %}
     <h1>{{ account_name }}</h1>
+
+    <form action="/edit_account" method="GET">
+        <button type="submit">Edit account</button>
+    </form>
+
     <table>
         <thead>
             <tr>
