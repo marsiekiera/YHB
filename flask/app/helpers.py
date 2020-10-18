@@ -39,7 +39,7 @@ def payee_list_from_db(user_id, cur):
     """Create user's payee list of dict"""
     payee_list_dict = []
     cur.execute("""SELECT * FROM payee WHERE user_id = ? 
-        ORDER BY payee_name""",(user_id,))
+        ORDER BY payee_name COLLATE NOCASE ASC""",(user_id,))
     payee_db = cur.fetchall()
     if not payee_db:
         flash("You need to add payee before", 'error')
@@ -57,7 +57,7 @@ def category_list_from_db(user_id, cur):
     """Create user's category list of dict"""
     category_list_dict = []
     cur.execute("""SELECT * FROM category WHERE user_id = ? 
-        ORDER BY category_name""", (user_id,))
+        ORDER BY category_name COLLATE NOCASE ASC""", (user_id,))
     category_db = cur.fetchall()
     if not category_db:
         flash("You need to add category before", "error")
@@ -104,7 +104,7 @@ def account_list_from_db(user_id, cur):
     """Create user's category list of dict"""
     account_list_dict = []
     cur.execute("""SELECT * FROM account WHERE user_id = ? 
-        ORDER BY account_name""", (user_id,))
+        ORDER BY account_name COLLATE NOCASE ASC""", (user_id,))
     account_db = cur.fetchall()
     if not account_db:
         flash("You need to add category before", "error")
