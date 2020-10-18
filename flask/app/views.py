@@ -219,9 +219,11 @@ def account(account_name):
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         # create session account id
-        cur.execute("""SELECT account_id FROM account WHERE user_id = ? 
+        cur.execute("""SELECT * FROM account WHERE user_id = ? 
             AND account_name = ?""", (user_id, account_name))
-        session["account_id"] = cur.fetchone()[0]
+        account_db = cur.fetchall()[0]
+        session["account_id"] = account_db[0]
+        starting_balance = account_db[3]
         # user's payee list of dict using payee_list function
         payee_list_dict = payee_list_from_db(user_id, cur)
         # user's category list of dict using category_list function
@@ -231,7 +233,7 @@ def account(account_name):
                                                       payee_list_dict, 
                                                       category_list_dict)
         trans_list_dict = trans_list_dict_db[0]
-        total = trans_list_dict_db[1]
+        total = trans_list_dict_db[1] + starting_balance
     con.close()
 
     return render_template("account.html", account_name=account_name, 
