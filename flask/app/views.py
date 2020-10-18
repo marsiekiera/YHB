@@ -205,7 +205,40 @@ def add_account():
         flash("You have successfully add new account", "info")
         return redirect("/")
     else:
-        return render_template("add_account.html")
+        return render_template("account_add.html")
+
+
+@app.route("/edit_account/<account_name>", methods=["POST", "GET"])
+@login_required
+def edit_account(account_name):
+    if request.method == "POST":
+        new_account_name = request.form.get("account_name")
+        new_starting_balance = request.form.get("starting_balance")
+        account_hide = 1 if request.form.get("account_hide") == "on" else 0
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+            cur.execute("""UPDATE account SET account_name = ?, 
+                        starting_balance = ?, account_hide = ?
+                        WHERE account_id = ?""", 
+                        (new_account_name, new_starting_balance, account_hide,
+                        session['account_id']))
+            con.commit()
+        con.close
+        session['account_name'] = new_account_name
+        flash("Changes saved", "info")
+        return redirect(f"/account/{ session['account_name'] }")
+    else:
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+            cur.execute("""SELECT * FROM account WHERE account_id = ?""", 
+                        (session["account_id"],))
+            account_db = cur.fetchall()[0]
+            print(account_db)
+            starting_balance = account_db[3]
+            account_hide = int(account_db[4])
+        con.close()
+        return render_template("account_edit.html", account_name=account_name,
+        starting_balance=starting_balance, account_hide=account_hide)
 
 
 @app.route("/account/<account_name>")
@@ -371,16 +404,7 @@ def delete_transaction(transaction_id):
     flash("Transaction deleted", "info")
     return redirect(f"/account/{ session['account_name'] }")
 
-# to do
-@app.route("/edit_account", methods=["POST", "GET"])
-@login_required
-def edit_account():
-    if request.method == "POST":
-        # to do
-        flash("Changes saved", "info")
-        return redirect("/")
-    else:
-        return render_template("edit_account.html")
+
 
 # to do
 @app.route("/payees", methods=["POST", "GET"])
