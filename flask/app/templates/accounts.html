@@ -15,14 +15,20 @@
         </thead>
         <tfoot>
             <td>Total</td>
-            <td>{{ total }}</td>
+            <td>{{ total_accounts }}</td>
         </tfoot>
         <tbody>
             {% for acc in user_accounts_list %}
-            <tr>
-                <td><a href="/account/{{ acc['account_name'] }}">{{ acc["account_name"] }}</a></td>
-                <td>{{ acc["balance"] }}</td>
-            </tr>
+                {% if acc['account_hide'] == 0 %}
+                <tr>
+                    <td>
+                        <a href="/account/{{ acc['account_name'] }}">
+                        {{ acc["account_name"] }}
+                        </a>
+                    </td>
+                    <td>{{ acc["balance"] }}</td>
+                </tr>
+                {% endif %}
             {% endfor %}
         </tbody>
     </table>
