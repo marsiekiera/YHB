@@ -7,7 +7,7 @@
 {% block main %}
     <h1>{{ account_name }}</h1>
 
-    <form action="/edit_account" method="GET">
+    <form action="/edit_account/{{ account_name }}" method="GET">
         <button type="submit">Edit account</button>
     </form>
 
