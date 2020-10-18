@@ -118,7 +118,7 @@ def register():
                         (user_name, hash_password))
             con.commit()
         con.close()
-        flash("You have sucessfully register. You can login now.", "info")
+        flash("You have successfully register. You can login now.", "info")
         return redirect("/login")
     else:
         return render_template("register.html")
@@ -138,31 +138,38 @@ def logout():
 def accounts():
     """List of all accounts and balance"""
     user_id = session["user_id"]
-    total = 0
     user_accounts_list = []
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         cur.execute(
-            "SELECT * FROM account WHERE user_id = ? ORDER BY account_name", 
+            """SELECT * FROM account WHERE user_id = ? 
+            ORDER BY account_name COLLATE NOCASE ASC""", 
             (user_id,))
         user_accounts = cur.fetchall()
         if not user_accounts:
             flash("You don't have any account", "error")
             return redirect("/")
-
+        total_accounts = 0 # total balance all accounts
         for acc in user_accounts:
             account_dict = {}
-            for row in acc:
-                account_dict["account_id"] = acc[0]
-                account_dict["account_name"] = acc[1]
-                account_dict["balance"] = acc[3]
-                account_dict["account_hide"] = acc[4]
-            total += account_dict["balance"]
+            account_dict["account_id"] = acc[0]
+            account_dict["account_name"] = acc[1]
+            balance = acc[3] # starting balance
+            cur.execute("""SELECT * FROM transactions 
+                        WHERE user_id = ? AND account_id = ?""", 
+                        (user_id, account_dict["account_id"]))
+            trans_db = cur.fetchall()
+            for tran in trans_db:
+                balance = round(float(balance + tran[4]), 2)
+            account_dict["balance"] = balance # current balance
+            total_accounts += balance
+            account_dict["account_hide"] = acc[4]
             user_accounts_list.append(account_dict)
     con.close()
 
     return render_template(
-        "accounts.html", user_accounts_list=user_accounts_list, total=total)
+        "accounts.html", user_accounts_list=user_accounts_list, 
+        total_accounts=total_accounts)
 
 
 @app.route("/add_account", methods=["POST", "GET"])
@@ -195,7 +202,7 @@ def add_account():
             con.commit()  
         con.close()
 
-        flash("You have sucessfully add new account", "info")
+        flash("You have successfully add new account", "info")
         return redirect("/")
     else:
         return render_template("add_account.html")
@@ -263,7 +270,7 @@ def add_transaction():
             category_id, amount, user_id, account_id))
         con.commit()      
     con.close()
-    flash("Transaction sucessfully added", "info")
+    flash("Transaction successfully added", "info")
     return redirect(f"/account/{ session['account_name'] }")
 
 
@@ -304,6 +311,7 @@ def transaction(transaction_id):
                 account_id, transaction_id))
             con.commit()
         con.close()
+        flash("Transaction successfully edited", "info")
         return redirect(f"/account/{ session['account_name'] }")
     else:
         account_name = session["account_name"]
@@ -355,9 +363,10 @@ def delete_transaction(transaction_id):
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         cur.execute("DELETE FROM transactions WHERE transaction_id = ?", 
-        (transaction_id,))
+                    (transaction_id,))
         con.commit()
     con.close()
+    flash("Transaction deleted", "info")
     return redirect(f"/account/{ session['account_name'] }")
 
 # to do
