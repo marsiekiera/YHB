@@ -8,7 +8,7 @@ from datetime import datetime
 
 from app.helpers import (check_password, login_required, only_digit, 
     payee_list_from_db, category_list_from_db, transaction_list_from_db,
-    account_list_from_db)
+    account_list_from_db, amount_uni)
 
 # Templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -244,7 +244,7 @@ def add_transaction():
     if not only_digit(amount_form):
         flash("Amount incorrect", "error")
         return redirect(f"/account/{ session['account_name'] }")
-    amount = round(float(amount_form.replace(',','.')), 2) * trans_type
+    amount = amount_uni(amount_form) * trans_type
     # Connect with database
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
@@ -271,16 +271,44 @@ def add_transaction():
 @login_required
 def transaction(transaction_id):
     """Edit transaction"""
+    with sql.connect("sqlite.db") as con:
+        cur =  con.cursor()
+        # user's payee list of dict using payee_list function
+        payee_list_dict = payee_list_from_db(session["user_id"], cur)
+        # user's category list of dict using category_list function
+        category_list_dict = category_list_from_db(session["user_id"], cur)
+        # user's accounts list of dict using account_list function
+        account_list_dict = account_list_from_db(session["user_id"], cur)
+    con.close()
+
     if request.method == "POST":
-        # możliwość zmiany konta?
-        # to do
-        return render_template("transaction.html")
+        for pay in payee_list_dict:
+            if pay["payee_name"] == request.form.get("payee"):
+                payee_id = pay["payee_id"]
+        for cat in category_list_dict:
+            if cat["category_name"] == request.form.get("category"):
+                category_id = cat["category_id"]
+        for acc in account_list_dict:
+            if acc["account_name"] == request.form.get("account"):
+                account_id = acc["account_id"]
+        amount = (amount_uni(request.form.get("amount")) 
+                    * int(request.form.get("transaction_type")))
+        with sql.connect("sqlite.db") as con:
+            cur =  con.cursor()
+            cur.execute("""
+                UPDATE transactions 
+                SET date = ?, payee_id = ?, category_id = ?, amount = ?, 
+                account_id = ?
+                WHERE transaction_id = ?
+                """, (request.form.get("date"), payee_id, category_id, amount, 
+                account_id, transaction_id))
+            con.commit()
+        con.close()
+        return redirect(f"/account/{ session['account_name'] }")
     else:
-        user_id = session["user_id"]
         account_name = session["account_name"]
         account_id = session["account_id"]
         transaction_id = int(transaction_id)
-
         with sql.connect("sqlite.db") as con:
             cur = con.cursor()
             cur.execute(
@@ -289,7 +317,7 @@ def transaction(transaction_id):
             transaction_db = cur.fetchone()
             if (not transaction_db 
                 or transaction_id != transaction_db[0] 
-                or user_id != transaction_db[5] 
+                or session["user_id"] != transaction_db[5] 
                 or account_id != transaction_db[6]):
                 flash("Database error. Contact with admin", "error")
                 return redirect("/")
@@ -304,14 +332,6 @@ def transaction(transaction_id):
             else:
                 tran_type = "Withdrawal"
                 amount *= -1
-
-            # user's payee list of dict using payee_list function
-            payee_list_dict = payee_list_from_db(user_id, cur)
-            # user's category list of dict using category_list function
-            category_list_dict = category_list_from_db(user_id, cur)
-            # user's accounts list of dict using account_list function
-            account_list_dict = account_list_from_db(user_id, cur)
-            
             cur.execute("SELECT payee_name FROM payee WHERE payee_id = ?",
                         (payee_id,))
             payee_name = cur.fetchone()[0]
@@ -320,13 +340,25 @@ def transaction(transaction_id):
                 "SELECT category_name FROM category WHERE category_id = ?",
                 (category_id,))
             category_name = cur.fetchone()[0]
-
+        con.close()
         return render_template(
             "transaction.html", date=date, tran_type=tran_type, amount=amount,
             transaction_id=transaction_id, 
             payee_list_dict=payee_list_dict, payee_name=payee_name, 
             category_list_dict=category_list_dict, category_name=category_name,
             account_list_dict=account_list_dict, account_name=account_name)
+
+
+@app.route("/delete_transaction/<transaction_id>")
+@login_required
+def delete_transaction(transaction_id):
+    with sql.connect("sqlite.db") as con:
+        cur = con.cursor()
+        cur.execute("DELETE FROM transactions WHERE transaction_id = ?", 
+        (transaction_id,))
+        con.commit()
+    con.close()
+    return redirect(f"/account/{ session['account_name'] }")
 
 # to do
 @app.route("/edit_account", methods=["POST", "GET"])
