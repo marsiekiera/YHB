@@ -118,3 +118,7 @@ def account_list_from_db(user_id, cur):
         account_dict["account_hide"] = acc[4]
         account_list_dict.append(account_dict)
     return account_list_dict
+
+
+def amount_uni(amount):
+    return round(float(amount.replace(',','.')), 2)
