@@ -405,16 +405,31 @@ def delete_transaction(transaction_id):
     return redirect(f"/account/{ session['account_name'] }")
 
 
-
-# to do
-@app.route("/payees", methods=["POST", "GET"])
+@app.route("/payees")
 @login_required
 def payees():
-    if request.method == "POST":
-        return redirect("/")
-    # to do
-    else:
-        return redirect("/")
+    with sql.connect("sqlite.db") as con:
+        cur = con.cursor()
+        payee_list_dict = payee_list_from_db(session["user_id"], cur)
+        for payee in payee_list_dict:
+            cur.execute(
+                "SELECT MAX(date) FROM transactions WHERE payee_id = ?",
+                (payee["payee_id"],))
+            payee["last_paid"] = cur.fetchone()[0]
+    con.close()
+    return render_template("payees.html", payee_list_dict=payee_list_dict)
+
+
+@app.route("/add_payee")
+@login_required
+def payee_add():
+    redirect("/")
+
+@app.route("/payee/<payee_id>")
+@login_required
+def payee(payee_id):
+    redirect("/")
+
 
 # to do
 @app.route("/categories", methods=["POST", "GET"])
@@ -442,6 +457,5 @@ def categories():
                 category_id = cur.fetchone()
                 print(f"category_id = { category_id }")
         con.close()
-
     else:
         return redirect("/")
