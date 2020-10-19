@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Payees
+{% endblock %}
+
+{% block main %}
+    <h1>Payees</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Payee</th>
+                <th>Description</th>
+                <th>Last Paid</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payee in payee_list_dict %}
+            <tr>
+                <td>
+                    <a href="/payee/{{ payee['payee_id'] }}">
+                        {{ payee["payee_name"] }}
+                    </a>
+                </td>
+                <td>{{ payee["description"] }}</td>
+                <td>{{ payee["last_paid"] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form action="/add_payee" method="POST">
+        <input name="payee_name" type="text" placeholder="Payee Name">
+        <label for="payee_name">Payee Name</label>
+
+        <input name="description" type="text" placeholder="Description">
+        <label for="description">Description</label>
+
+        <button type="submit">Add Payee</button>
+    </form>
+{% endblock %}
