@@ -49,6 +49,7 @@ def payee_list_from_db(user_id, cur):
         payee_dict["payee_id"] = pay[0]
         payee_dict["payee_name"] = pay[1]
         payee_dict["user_id"] = pay[2]
+        payee_dict["description"] = pay[3]
         payee_list_dict.append(payee_dict)
     return payee_list_dict
 
