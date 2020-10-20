@@ -437,7 +437,45 @@ def payee_add():
 @app.route("/payee/<payee_id>")
 @login_required
 def payee(payee_id):
-    redirect("/")
+    with sql.connect("sqlite.db") as con:
+        cur = con.cursor()
+        # payee name
+        cur.execute("SELECT payee_name FROM payee WHERE payee_id = ?",
+                    (payee_id,))
+        payee_name = cur.fetchone()[0]
+        # category list
+        category_list_dict = category_list_from_db(session["user_id"], cur)
+        # account list
+        account_list_dict = account_list_from_db(session["user_id"], cur)
+        # transaction list
+        cur.execute(
+            """SELECT * FROM transactions WHERE user_id = ? AND payee_id = ? 
+            ORDER BY date""", (session["user_id"], payee_id))
+        trans_db = cur.fetchall()
+    con.close()
+    total = 0
+    trans_list_dict = []
+    for tran in trans_db:
+        tran_dict = {}
+        tran_dict["transaction_id"] = tran[0]
+        tran_dict["date"] = tran[1]
+        tran_dict["payee_id"] = tran[2]
+        tran_dict["payee_name"] = payee_name
+        tran_dict["category_id"] = tran[3]
+        for cat in category_list_dict:
+            if cat["category_id"] == tran[3]:
+                tran_dict["category_name"] = cat["category_name"]
+        tran_dict["amount"] = tran[4]
+        total = round(float(total + tran[4]), 2)
+        tran_dict["user_id"] = tran[5]
+        tran_dict["account_id"] = tran[6]
+        for acc in account_list_dict:
+            if acc["account_id"] == tran[6]:
+                tran_dict["account_name"] = acc["account_name"]
+        trans_list_dict.append(tran_dict)
+
+    return render_template("payee.html", payee_name=payee_name, 
+                           trans_list_dict=trans_list_dict, total=total)
 
 
 # to do
