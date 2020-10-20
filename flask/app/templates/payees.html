@@ -23,8 +23,16 @@
                         {{ payee["payee_name"] }}
                     </a>
                 </td>
+                {% if payee["description"] %}
                 <td>{{ payee["description"] }}</td>
+                {% else %}
+                <td></td>
+                {% endif %}
+                {% if payee["last_paid"] %}
                 <td>{{ payee["last_paid"] }}</td>
+                {% else %}
+                <td></td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>
