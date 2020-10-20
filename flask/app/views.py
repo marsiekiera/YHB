@@ -420,10 +420,19 @@ def payees():
     return render_template("payees.html", payee_list_dict=payee_list_dict)
 
 
-@app.route("/add_payee")
+@app.route("/add_payee", methods=["POST"])
 @login_required
 def payee_add():
-    redirect("/")
+    with sql.connect("sqlite.db") as con:
+        cur = con.cursor()
+        cur.execute("""INSERT INTO payee (payee_name, user_id, description) 
+                    VALUES (?, ?, ?)""", (request.form.get("payee_name"),
+                    session["user_id"], request.form.get("description")))
+        con.commit()
+    con.close()
+    flash("Payee added", "info")
+    return redirect("/payees")
+
 
 @app.route("/payee/<payee_id>")
 @login_required
