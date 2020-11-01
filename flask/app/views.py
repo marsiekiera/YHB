@@ -478,31 +478,84 @@ def payee(payee_id):
                            trans_list_dict=trans_list_dict, total=total)
 
 
-# to do
-@app.route("/categories", methods=["POST", "GET"])
+@app.route("/categories")
 @login_required
 def categories():
-    if request.method == "POST":
-        return redirect("/")
-    
-        with sql.connect("sqlite.db") as con:
-            con.row_factory = sql.Row
-            cur = con.cursor()
+    with sql.connect("sqlite.db") as con:
+        cur = con.cursor()
+        category_list_dict = category_list_from_db(session['user_id'], cur)
+        for cat in category_list_dict:
+            cur.execute(
+                "SELECT MAX(date) FROM transactions WHERE category_id = ?",
+                (cat["category_id"],))
+            cat["last_paid"] = cur.fetchone()[0]
+    con.close()
+    return render_template(
+        "categories.html", category_list_dict=category_list_dict)
 
-            cur.execute("""SELECT category_id FROM category WHERE 
-            category_name = ? AND user_id = ?""", (category, user_id))
-            category_id = cur.fetchone()
-            
-            if not category_id:
-                # Add new category to database
-                cur.execute("""INSERT INTO category (category_name, user_id) 
-                    VALUES (?, ?)""", (category, user_id))
-                con.commit()
-                cur.execute("""SELECT category_id FROM category 
-                    WHERE category_name = ? AND user_id = ?""", 
-                    (category, user_id))
-                category_id = cur.fetchone()
-                print(f"category_id = { category_id }")
-        con.close()
-    else:
-        return redirect("/")
+
+@app.route("/category_add", methods=["POST"])
+@login_required
+def category_add():
+    # if request.method == "POST":
+    with sql.connect("sqlite.db") as con:
+        cur = con.cursor()
+        cur.execute(
+            """SELECT category_id FROM category 
+            WHERE category_name = ? AND user_id = ?""", 
+            (request.form.get("category_name"), session["user_id"]))
+        category_id = cur.fetchone()
+        if not category_id:
+            cur.execute(
+                """INSERT INTO category (category_name, user_id) 
+                VALUES (?, ?)""", 
+                (request.form.get("category_name"),session["user_id"]))
+            con.commit()
+    con.close()
+    return redirect("/categories")
+
+
+@app.route("/category/<category_id>")
+@login_required
+def category(category_id):
+    with sql.connect("sqlite.db") as con:
+        cur = con.cursor()
+        # payee name
+        cur.execute(
+            "SELECT category_name FROM category WHERE category_id = ?",
+            (category_id,))
+        category_name = cur.fetchone()[0]
+        # category list
+        payee_list_dict = payee_list_from_db(session["user_id"], cur)
+        # account list
+        account_list_dict = account_list_from_db(session["user_id"], cur)
+        # transaction list
+        cur.execute(
+            """SELECT * FROM transactions 
+            WHERE user_id = ? AND category_id = ? ORDER BY date""", 
+            (session["user_id"], category_id))
+        trans_db = cur.fetchall()
+    con.close()
+    total = 0
+    trans_list_dict = []
+    for tran in trans_db:
+        tran_dict = {}
+        tran_dict["transaction_id"] = tran[0]
+        tran_dict["date"] = tran[1]
+        tran_dict["payee_id"] = tran[2]
+        for pay in payee_list_dict:
+            if pay["payee_id"] == tran[2]:
+                tran_dict["payee_name"] = pay["payee_name"]
+        tran_dict["category_id"] = tran[3]
+        tran_dict["category_name"] = category_name
+        tran_dict["amount"] = tran[4]
+        total = round(float(total + tran[4]), 2)
+        tran_dict["user_id"] = tran[5]
+        tran_dict["account_id"] = tran[6]
+        for acc in account_list_dict:
+            if acc["account_id"] == tran[6]:
+                tran_dict["account_name"] = acc["account_name"]
+        trans_list_dict.append(tran_dict)
+
+    return render_template("category.html", category_name=category_name, 
+                           trans_list_dict=trans_list_dict, total=total)
