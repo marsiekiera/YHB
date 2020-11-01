@@ -9,7 +9,7 @@ CREATE TABLE category (category_id INTEGER PRIMARY KEY,
 category_name TEXT NOT NULL, user_id INTEGER NOT NULL);
 
 CREATE TABLE payee (payee_id INTEGER PRIMARY KEY, 
-payee_name TEXT NOT NULL, user_id INTEGER NOT NULL);
+payee_name TEXT NOT NULL, user_id INTEGER NOT NULL, description TEXT);
 
 CREATE TABLE transactions (transaction_id INTEGER PRIMARY KEY, 
 date TEXT NOT NULL, payee_id INTEGER NOT NULL, 
