@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Categories
+{% endblock %}
+
+{% block main %}
+    <h1>Categories</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Last Paid</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cat in category_list_dict %}
+            <tr>
+                <td>
+                    <a href="/category/{{ cat['category_id'] }}">
+                        {{ cat["category_name"] }}
+                    </a>
+                </td>
+                {% if cat["last_paid"] %}
+                <td>{{ cat["last_paid"] }}</td>
+                {% else %}
+                <td></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form action="/category_add" method="POST">
+        <input name="category_name" type="text" placeholder="Category">
+        <label for="category_name">Category</label>
+
+        <button type="submit">Add Category</button>
+    </form>
+{% endblock %}
