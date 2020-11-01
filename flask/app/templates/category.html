@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ category_name }}
+{% endblock %}
+
+{% block main %}
+    <h1>{{ category_name }}</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Account</th>
+                <th>Payee</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Ending balance</td>
+                <td>{{ total }}</td>
+            </tr>
+        </tfoot>
+        <tbody>
+            {% for tran in trans_list_dict %}
+            <tr>
+                <td>{{ tran["date"] }}</td>
+                <td>{{ tran["account_name"] }}</td>
+                <td>{{ tran["payee_name"] }}</td>
+                <td>{{ tran["amount"] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
