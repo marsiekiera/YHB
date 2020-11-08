@@ -18,9 +18,15 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/login" method="POST">
-        <input autocomplete="off" placeholder="Username" name="user_name" type="text">
-        <input autocomplete="off" placeholder="Password" name="password" type="password">
-        <button type="submit">Login</button>
-    </form>
+<form action="/login" method="POST">
+  <div class="form-group">
+    <label for="user_name">Login</label>
+    <input type="text" class="form-control" name="user_name" autocomplete="off">
+  </div>
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input type="password" class="form-control" name="password" autocomplete="off" >
+  </div>
+  <button type="submit" class="btn btn-primary">Log-In</button>
+</form>
 {% endblock %}
