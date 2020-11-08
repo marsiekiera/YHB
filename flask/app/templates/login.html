@@ -4,12 +4,23 @@
     Login
 {% endblock %}
 
+{% block navbar %}
+    <a href="/login">
+        <button class="btn btn-outline-success" type="button">
+            Login
+        </button>
+    </a>
+    <a href="/register">
+        <button class="btn btn-sm btn-outline-secondary" type="button">
+            Register
+        </button>
+    </a>
+{% endblock %}
+
 {% block main %}
     <form action="/login" method="POST">
         <input autocomplete="off" placeholder="Username" name="user_name" type="text">
         <input autocomplete="off" placeholder="Password" name="password" type="password">
         <button type="submit">Login</button>
     </form>
-    
-    <a href="/register">register</a>
 {% endblock %}
