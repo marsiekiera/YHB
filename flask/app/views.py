@@ -27,14 +27,31 @@ app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 
+# Create dictionary for navbar and make it global for all templates
+href_dict = {
+    "Home": "/", 
+    "Accounts": "/accounts",
+    "Payees": "/payees",
+    "Categories": "/categories",
+    "Logout": "/logout",
+    }
+
+
+@app.context_processor
+def inject_dict_for_all_templates():
+    return dict(href_dict=href_dict)
+
+
+# All Flask modules
 
 @app.route("/")
 @login_required
 def index():
     """Homepage"""
+    st_name = "Home"
     # Use os.getenv("key") to get environment variables
     app_name = os.getenv("YHB")
-    return render_template("index.html")
+    return render_template("index.html", st_name=st_name)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -137,6 +154,7 @@ def logout():
 @login_required
 def accounts():
     """List of all accounts and balance"""
+    st_name = "Accounts"
     user_id = session["user_id"]
     user_accounts_list = []
     with sql.connect("sqlite.db") as con:
@@ -169,7 +187,7 @@ def accounts():
 
     return render_template(
         "accounts.html", user_accounts_list=user_accounts_list, 
-        total_accounts=total_accounts)
+        total_accounts=total_accounts, st_name=st_name)
 
 
 @app.route("/add_account", methods=["POST", "GET"])
@@ -184,8 +202,8 @@ def add_account():
             account_name = request.form.get("account_name")
             # Check in database if user already have account with that name
             cur.execute(
-                "SELECT * FROM account WHERE user_id = ? AND account_name = ?",
-                (user_id, account_name))
+                """SELECT * FROM account WHERE user_id = ? 
+                AND account_name = ?""", (user_id, account_name))
             if cur.fetchone():
                 flash("You already have an account with that name", "error")
                 return redirect("/add_account")
@@ -211,6 +229,7 @@ def add_account():
 @app.route("/edit_account/<account_name>", methods=["POST", "GET"])
 @login_required
 def edit_account(account_name):
+    """Edit details of account"""
     if request.method == "POST":
         new_account_name = request.form.get("account_name")
         new_starting_balance = request.form.get("starting_balance")
@@ -244,7 +263,7 @@ def edit_account(account_name):
 @app.route("/account/<account_name>")
 @login_required
 def account(account_name):
-    """ List of all transactions in the account"""
+    """List of all transactions in the account"""
     user_id = session["user_id"]
     session["account_name"] = account_name
     today = datetime.now().strftime('%Y-%m-%d')
@@ -271,12 +290,14 @@ def account(account_name):
 
     return render_template("account.html", account_name=account_name, 
         today=today, payee_list_dict=payee_list_dict, total=total,
-        category_list_dict=category_list_dict, trans_list_dict=trans_list_dict)
+        category_list_dict=category_list_dict, 
+        trans_list_dict=trans_list_dict)
 
 
 @app.route("/add_transaction", methods=["POST"])
 @login_required
 def add_transaction():
+    """Add new transaction"""
     user_id = session["user_id"]
     account_id = session["account_id"]
     # Amount
@@ -388,13 +409,15 @@ def transaction(transaction_id):
             "transaction.html", date=date, tran_type=tran_type, amount=amount,
             transaction_id=transaction_id, 
             payee_list_dict=payee_list_dict, payee_name=payee_name, 
-            category_list_dict=category_list_dict, category_name=category_name,
-            account_list_dict=account_list_dict, account_name=account_name)
+            category_list_dict=category_list_dict, 
+            category_name=category_name, account_list_dict=account_list_dict, 
+            account_name=account_name)
 
 
 @app.route("/delete_transaction/<transaction_id>")
 @login_required
 def delete_transaction(transaction_id):
+    """Delete transaction"""
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         cur.execute("DELETE FROM transactions WHERE transaction_id = ?", 
@@ -408,6 +431,8 @@ def delete_transaction(transaction_id):
 @app.route("/payees")
 @login_required
 def payees():
+    """List of all user's payees"""
+    st_name = "Payees"
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         payee_list_dict = payee_list_from_db(session["user_id"], cur)
@@ -417,12 +442,14 @@ def payees():
                 (payee["payee_id"],))
             payee["last_paid"] = cur.fetchone()[0]
     con.close()
-    return render_template("payees.html", payee_list_dict=payee_list_dict)
+    return render_template("payees.html", payee_list_dict=payee_list_dict, 
+                           st_name=st_name)
 
 
 @app.route("/add_payee", methods=["POST"])
 @login_required
 def payee_add():
+    """Add new payee"""
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         cur.execute("""INSERT INTO payee (payee_name, user_id, description) 
@@ -437,6 +464,7 @@ def payee_add():
 @app.route("/payee/<payee_id>")
 @login_required
 def payee(payee_id):
+    """Preview of selected payee"""
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         # payee name
@@ -481,6 +509,8 @@ def payee(payee_id):
 @app.route("/categories")
 @login_required
 def categories():
+    """List of all user's categories"""
+    st_name = "Categories"
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         category_list_dict = category_list_from_db(session['user_id'], cur)
@@ -491,13 +521,14 @@ def categories():
             cat["last_paid"] = cur.fetchone()[0]
     con.close()
     return render_template(
-        "categories.html", category_list_dict=category_list_dict)
+        "categories.html", category_list_dict=category_list_dict, 
+        st_name=st_name)
 
 
 @app.route("/category_add", methods=["POST"])
 @login_required
 def category_add():
-    # if request.method == "POST":
+    """Add new category"""
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         cur.execute(
@@ -518,6 +549,7 @@ def category_add():
 @app.route("/category/<category_id>")
 @login_required
 def category(category_id):
+    """Preview of selected category"""
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         # payee name
