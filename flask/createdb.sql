@@ -1,5 +1,5 @@
 CREATE TABLE users (user_id INTEGER PRIMARY KEY, 
-user_name TEXT NOT NULL, hash TEXT NOT NULL);
+user_name TEXT NOT NULL UNIQUE, hash TEXT NOT NULL);
 
 CREATE TABLE account (account_id INTEGER PRIMARY KEY, 
 account_name TEXT NOT NULL, user_id INTEGER NOT NULL, 
