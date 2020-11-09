@@ -33,6 +33,7 @@ href_dict = {
     "Accounts": "/accounts",
     "Payees": "/payees",
     "Categories": "/categories",
+    "Settings": "/settings",
     "Logout": "/logout",
     }
 
