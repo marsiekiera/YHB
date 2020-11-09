@@ -33,8 +33,6 @@ href_dict = {
     "Accounts": "/accounts",
     "Payees": "/payees",
     "Categories": "/categories",
-    "Settings": "/settings",
-    "Logout": "/logout",
     }
 
 
@@ -592,3 +590,9 @@ def category(category_id):
 
     return render_template("category.html", category_name=category_name, 
                            trans_list_dict=trans_list_dict, total=total)
+
+
+@app.route("/settings")
+@login_required
+def settings():
+    return redirect("/")
