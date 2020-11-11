@@ -5,44 +5,54 @@
 {% endblock %}
 
 {% block main %}
-    <h1>{{ account_name }}</h1>
-
+<h3 class="text-success text-center">{{ account_name }}</h3>
     <form action="/edit_account/{{ account_name }}" method="GET">
         <button type="submit">Edit account</button>
     </form>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Payee</th>
-                <th>Category</th>
-                <th>Amount</th>
-            </tr>
-        </thead>
-        <tfoot>
-            <tr>
-                <td></td>
-                <td></td>
-                <td>Ending balance</td>
-                <td>{{ total }}</td>
-            </tr>
-        </tfoot>
-        <tbody>
-            {% for tran in trans_list_dict %}
-            <tr>
-                <td>
-                    <a href="/transaction/{{ tran['transaction_id'] }}">
-                        {{ tran["date"] }}
-                    </a>
-                </td>
-                <td>{{ tran["payee_name"] }}</td>
-                <td>{{ tran["category_name"] }}</td>
-                <td>{{ tran["amount"] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="w-100 border border-success">
+        <div class="scrollable">
+            <table class="table table-hover table-sm table-bordered">
+                <thead>
+                    <tr class="table-success">
+                        <th>Date</th>
+                        <th>Payee</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="body-table-container scrollable">
+            <table class="table table-hover table-sm table-bordered">
+                <tbody>
+                    {% for tran in trans_list_dict %}
+                    <tr>
+                        <td>
+                            <a href="/transaction/{{ tran['transaction_id'] }}">
+                                {{ tran["date"] }}
+                            </a>
+                        </td>
+                        <td>{{ tran["payee_name"] }}</td>
+                        <td>{{ tran["category_name"] }}</td>
+                        <td>{{ tran["amount"] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="scrollable">
+            <table class="table table-hover table-sm">
+                <thead>
+                    <tr class="table-success">
+                        <th></th>
+                        <th></th>
+                        <th>Ending balance</th>
+                        <th>{{ total }}</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
 
     <form action="/add_transaction" method="POST">
         <input name="date" type="date" value="{{ today }}" min="2000-01-01">

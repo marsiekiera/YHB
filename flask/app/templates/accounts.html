@@ -5,31 +5,45 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Accounts</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Account</th>
-                <th>Balance</th>
-            </tr>
-        </thead>
-        <tfoot>
-            <td>Total</td>
-            <td>{{ total_accounts }}</td>
-        </tfoot>
-        <tbody>
-            {% for acc in user_accounts_list %}
-                {% if acc['account_hide'] == 0 %}
-                <tr>
-                    <td>
-                        <a href="/account/{{ acc['account_name'] }}">
-                        {{ acc["account_name"] }}
-                        </a>
-                    </td>
-                    <td>{{ acc["balance"] }}</td>
-                </tr>
-                {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
+    <h2 class="text-success text-center">Accounts</h2>
+    <div class="table-container border border-success">
+        <div class="scrollable">
+            <table class="table table-hover">
+                <thead>
+                    <tr class="table-success">
+                        <th>Account</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="body-table-container scrollable">
+            <table class="table table-hover">
+                <tbody>
+                    {% for acc in user_accounts_list %}
+                        {% if acc['account_hide'] == 0 %}
+                        <tr>
+                            <td>
+                                <a href="/account/{{ acc['account_name'] }}">
+                                {{ acc["account_name"] }}
+                                </a>
+                            </td>
+                            <td>{{ acc["balance"] }}</td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="scrollable">
+            <table class="table table-hover">
+                <thead>
+                    <tr class="table-success">
+                        <th>Total Account Balance:</th>
+                        <th>{{ total_accounts }}</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
 {% endblock %}
