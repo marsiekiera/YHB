@@ -50,6 +50,7 @@
                     {% block navbar %}{% endblock %}
                 {% endif %}
             </form>
+            {% if session.user_id %}
                 <form class="form-inline my-2 my-lg-0">
                     <a href="/settings">
                         {% if st_name == "Settings" %}
@@ -68,6 +69,7 @@
                         </button>
                     </a>
                 </form>
+            {% endif %}
             </nav>
             
             {% with messages = get_flashed_messages(with_categories=true) %}
