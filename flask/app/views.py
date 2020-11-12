@@ -56,9 +56,9 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
-    # Forget any user_id
-    session.clear()
     if request.method == "POST":
+        # Forget any user_id
+        session.clear()
         # connect with database
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
@@ -91,7 +91,11 @@ def login():
         flash("You were successfully logged in", "info")
         return redirect("/")
     else:
-        return render_template("login.html")
+        if session["user_id"]:
+            flash("You are already logged in", "info")
+            return redirect("/")
+        else:
+            return render_template("login.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -116,9 +120,7 @@ def register():
             if not request.form.get("password"):
                 flash("Please provide password", "error")
                 return redirect("/register")
-            elif not (request.form.get("re_password") or 
-                     request.form.get("password") != 
-                     request.form.get("re_password")):
+            if not request.form.get("re_password") or request.form.get("password") != request.form.get("re_password"):
                 flash("Please re-type the same password", "error")
                 return redirect("/register")
             elif not check_password(request.form.get("password")):
