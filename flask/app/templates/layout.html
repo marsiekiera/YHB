@@ -30,22 +30,22 @@
                     <span style="color:green;">Y</span>our <span style="color:green;">H</span>ome <span style="color:green;">B</span>udget
                 </a>
                 {% if session.user_id %}
-                {% for element in href_list_keys %}
-                    {% if element == st_name %}
-                        <a href="{{ href_dict[element] }}">
-                        <button  class="btn btn-outline-success" type="button">
-                            {{ element }}
-                        </button>
-                        </a>
-                    {% else %}
-                        <a href="{{ href_dict[element] }}">
-                        <button class="btn btn-sm btn-outline-secondary" 
-                        type="button">
-                            {{ element }}
-                        </button>
-                        </a>
-                    {% endif %}
-                {% endfor %}
+                    {% for element in href_list_keys %}
+                        {% if element == st_name %}
+                            <a href="{{ href_dict[element] }}">
+                            <button  class="btn btn-outline-success" type="button">
+                                {{ element }}
+                            </button>
+                            </a>
+                        {% else %}
+                            <a href="{{ href_dict[element] }}">
+                            <button class="btn btn-sm btn-outline-secondary" 
+                            type="button">
+                                {{ element }}
+                            </button>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
                 {% else %}
                     {% block navbar %}{% endblock %}
                 {% endif %}
@@ -71,14 +71,20 @@
                 </form>
             {% endif %}
             </nav>
-            
+
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <ul class=flashes>
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                    </ul>
+                    <header>
+                        {% for category, message in messages %}
+                            {% if category == "info" %}
+                                <div class="alert alert-success border text-center" role="alert">
+                            {% elif category == "error" %}
+                                <div class="alert alert-danger border text-center" role="alert">
+                            {% endif %}
+                                    {{ message }}
+                                </div>
+                        {% endfor %}
+                    </header>
                 {% endif %}
             {% endwith %}
 

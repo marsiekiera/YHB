@@ -1,12 +1,3 @@
-.error {
-    color: yellow;
-    background-color: red;
-}
-
-.info {
-    background-color: green;
-}
-
 .scrollable {
     overflow-y: scroll;
 }
