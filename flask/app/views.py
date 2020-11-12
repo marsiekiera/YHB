@@ -91,7 +91,7 @@ def login():
         flash("You were successfully logged in", "info")
         return redirect("/")
     else:
-        if session["user_id"]:
+        if 'user_id' in session:
             flash("You are already logged in", "info")
             return redirect("/")
         else:
