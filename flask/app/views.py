@@ -155,6 +155,7 @@ def logout():
 @login_required
 def accounts():
     """List of all accounts and balance"""
+    today = datetime.now().strftime('%Y-%m-%d')
     st_name = "Accounts"
     user_id = session["user_id"]
     user_accounts_list = []
@@ -188,7 +189,13 @@ def accounts():
 
     return render_template(
         "accounts.html", user_accounts_list=user_accounts_list, 
-        total_accounts=total_accounts, st_name=st_name)
+        total_accounts=total_accounts, st_name=st_name, today=today)
+
+
+@app.route("/transfer", methods=["POST"])
+@login_required
+def transfer():
+    return redirect("/accounts")
 
 
 @app.route("/add_account", methods=["POST", "GET"])
