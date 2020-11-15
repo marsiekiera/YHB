@@ -5,8 +5,17 @@
 {% endblock %}
 
 {% block main %}
-    <h2 class="text-success text-center">Accounts</h2>
-    <div class="table-container border border-success">
+    <form action="/add_account" method="GET">
+        <div class="form-row mt-2 mb-2">
+            <div class="col">
+                <h3 class="text-success text-center">Accounts</h3>
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-outline-success">Add account</button>
+            </div>
+        </div>
+    </form>
+    <div class="table-container border border-success mt-2 mb-2">
         <div class="scrollable">
             <table class="table table-hover">
                 <thead>
