@@ -5,14 +5,25 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Add new account</h1>
-
-    <form action="/add_account" method="POST">
-        <input autocomplete="off" placeholder="Account name" name="account_name" type="text">
-        <label for="account_name">Account name</label>
-        <input autocomplete="off" placeholder="0" name="starting_balance" type="text" step="0.01">
-        <label for="starting_balance">Starting balance</label>
-        <button type="submit">Add account</button>
-    </form>
-
+<h3 class="text-success text-center">Add new account</h3>
+<form action="/add_account" method="POST">
+    <div class="form-row">
+        <div class="form-group col">
+            <input class="form-control" autocomplete="off" placeholder="Account name" name="account_name" type="text">
+            <label for="account_name">Account name</label>
+        </div>
+        <div class="form-group col">
+            <input class="form-control" autocomplete="off" placeholder="0" name="starting_balance" type="text" step="0.01">
+            <label for="starting_balance">Starting balance</label>
+        </div>
+        <div class="col">
+            <button type="submit" class="btn btn-success">Add account</button>
+        </div>
+    </div>
+</form>
+<form action="/accounts">
+<div class="form-row">
+    <button class="btn btn-danger" type="submit">Cancel</button>
+</div>
+</form>
 {% endblock %}
