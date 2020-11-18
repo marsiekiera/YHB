@@ -5,37 +5,49 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Categories</h1>
+<h3 class="text-success text-center">Categories</h3>
+<div class="table-container border border-success mt-2 mb-2">
+    <div class="scrollable">
+        <table class="table table-hover">
+            <thead>
+                <tr class="table-success">
+                    <th>Category</th>
+                    <th>Last Paid</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+    <div class="body-table-container scrollable">
+        <table class="table table-hover">
+            <tbody>
+                {% for cat in category_list_dict %}
+                <tr>
+                    <td>
+                        <a href="/category/{{ cat['category_id'] }}">
+                            {{ cat["category_name"] }}
+                        </a>
+                    </td>
+                    {% if cat["last_paid"] %}
+                    <td>{{ cat["last_paid"] }}</td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<form action="/category_add" method="POST">
+    <div class="form-row">
+        <div class="form-group col">
+            <input name="category_name" type="text" class="form-control" placeholder="Category">
+            <label for="category_name">Category</label>
+        </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Category</th>
-                <th>Last Paid</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for cat in category_list_dict %}
-            <tr>
-                <td>
-                    <a href="/category/{{ cat['category_id'] }}">
-                        {{ cat["category_name"] }}
-                    </a>
-                </td>
-                {% if cat["last_paid"] %}
-                <td>{{ cat["last_paid"] }}</td>
-                {% else %}
-                <td></td>
-                {% endif %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <form action="/category_add" method="POST">
-        <input name="category_name" type="text" placeholder="Category">
-        <label for="category_name">Category</label>
-
-        <button type="submit">Add Category</button>
-    </form>
+        <div class="col">
+            <button type="submit" class="btn btn-success">Add Category</button>
+        </div>
+    </div>
+</form>
 {% endblock %}
