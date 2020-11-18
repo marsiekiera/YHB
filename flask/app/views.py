@@ -183,6 +183,7 @@ def accounts():
                 balance = round(float(balance + tran[4]), 2)
             account_dict["balance"] = balance # current balance
             total_accounts += balance
+            total_accounts = round(float(total_accounts), 2)
             account_dict["account_hide"] = acc[4]
             user_accounts_list.append(account_dict)
     con.close()
@@ -260,7 +261,6 @@ def edit_account(account_name):
             cur.execute("""SELECT * FROM account WHERE account_id = ?""", 
                         (session["account_id"],))
             account_db = cur.fetchall()[0]
-            print(account_db)
             starting_balance = account_db[3]
             account_hide = int(account_db[4])
         con.close()
@@ -376,10 +376,8 @@ def transaction(transaction_id):
             con.commit()
         con.close()
         flash("Transaction successfully edited", "info")
-        return redirect(f"/account/{ session['account_name'] }")
+        return redirect(f"/transaction/{ transaction_id }")
     else:
-        account_name = session["account_name"]
-        account_id = session["account_id"]
         transaction_id = int(transaction_id)
         with sql.connect("sqlite.db") as con:
             cur = con.cursor()
@@ -389,11 +387,9 @@ def transaction(transaction_id):
             transaction_db = cur.fetchone()
             if (not transaction_db 
                 or transaction_id != transaction_db[0] 
-                or session["user_id"] != transaction_db[5] 
-                or account_id != transaction_db[6]):
+                or session["user_id"] != transaction_db[5]):
                 flash("Database error. Contact with admin", "error")
                 return redirect("/")
-
             date = transaction_db[1]
             payee_id = transaction_db[2]
             category_id = transaction_db[3]
@@ -407,11 +403,14 @@ def transaction(transaction_id):
             cur.execute("SELECT payee_name FROM payee WHERE payee_id = ?",
                         (payee_id,))
             payee_name = cur.fetchone()[0]
-
             cur.execute(
                 "SELECT category_name FROM category WHERE category_id = ?",
                 (category_id,))
             category_name = cur.fetchone()[0]
+            cur.execute(
+                "SELECT account_name FROM account WHERE account_id = ?",
+                (account_id,))
+            account_name = cur.fetchone()[0]
         con.close()
         return render_template(
             "transaction.html", date=date, tran_type=tran_type, amount=amount,
@@ -514,6 +513,12 @@ def payee(payee_id):
                            trans_list_dict=trans_list_dict, total=total)
 
 
+@app.route("/payee_edit/<payee_id>", methods=["POST", "GET"])
+@login_required
+def payee_edit(payee_id):
+    # TO DO 
+    return redirect("/")
+
 @app.route("/categories")
 @login_required
 def categories():
@@ -599,6 +604,13 @@ def category(category_id):
 
     return render_template("category.html", category_name=category_name, 
                            trans_list_dict=trans_list_dict, total=total)
+
+
+@app.route("/category_edit/<category_id>", methods=["POST", "GET"])
+@login_required
+def category_edit(category_id):
+    # TO DO  
+    return redirect("/")
 
 
 @app.route("/settings")
