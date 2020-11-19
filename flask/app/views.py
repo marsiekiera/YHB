@@ -196,6 +196,7 @@ def accounts():
 @app.route("/transfer", methods=["POST"])
 @login_required
 def transfer():
+    # TO DO 
     return redirect("/accounts")
 
 
@@ -475,9 +476,12 @@ def payee(payee_id):
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         # payee name
-        cur.execute("SELECT payee_name FROM payee WHERE payee_id = ?",
-                    (payee_id,))
-        payee_name = cur.fetchone()[0]
+        cur.execute("SELECT * FROM payee WHERE payee_id = ?", (payee_id,))
+        payee_db = cur.fetchall()[0]
+        payee_name = payee_db[1]
+        description = payee_db[3]
+        if description == None:
+            description = ""
         # category list
         category_list_dict = category_list_from_db(session["user_id"], cur)
         # account list
@@ -509,15 +513,42 @@ def payee(payee_id):
                 tran_dict["account_name"] = acc["account_name"]
         trans_list_dict.append(tran_dict)
 
-    return render_template("payee.html", payee_name=payee_name, 
-                           trans_list_dict=trans_list_dict, total=total)
+    return render_template("payee.html", payee_name=payee_name, total=total, 
+                           trans_list_dict=trans_list_dict, payee_id=payee_id,
+                           description=description)
 
 
 @app.route("/payee_edit/<payee_id>", methods=["POST", "GET"])
 @login_required
 def payee_edit(payee_id):
-    # TO DO 
-    return redirect("/")
+    """Edit detail of payee"""
+    if request.method == "POST":
+        new_payee_name = request.form.get("payee_name")
+        new_description = request.form.get("description")
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+            cur.execute("""UPDATE payee SET payee_name = ?, description = ?
+                        WHERE payee_id = ?""", 
+                        (new_payee_name, new_description, payee_id,))
+            con.commit()
+        con.close()
+        flash("Payee successfully edited", "info")
+        return redirect(f"/payee/{payee_id}")
+    else:
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+            cur.execute("SELECT * FROM payee WHERE payee_id = ?", (payee_id,))
+            payee_db = cur.fetchall()[0]
+            user_id = payee_db[2]
+            if user_id != session["user_id"]:
+                flash("Error", "error")
+                return redirect("/")
+            payee_name = payee_db[1]
+            description = payee_db[3]
+        con.close()
+        return render_template("payee_edit.html", payee_id=payee_id, 
+                               payee_name=payee_name, description=description)
+
 
 @app.route("/categories")
 @login_required
@@ -609,11 +640,12 @@ def category(category_id):
 @app.route("/category_edit/<category_id>", methods=["POST", "GET"])
 @login_required
 def category_edit(category_id):
-    # TO DO  
+    # TO DO
     return redirect("/")
 
 
 @app.route("/settings")
 @login_required
 def settings():
+    # TO DO
     return redirect("/")

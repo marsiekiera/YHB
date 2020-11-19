@@ -7,8 +7,11 @@
 {% block main %}
 <form action="/payee_edit/{{ payee_id }}" method="GET">
     <div class="form-row mt-2 mb-2">
-        <div class="col">
-            <h3 class="text-success text-center">Payee: <span class="font-weight-bolder">{{ payee_name }}</span></h3>
+        <div class="col-3">
+            <h3 class="text-success text-center align-baseline">Payee: <span class="font-weight-bolder">{{ payee_name }}</span></h3>
+        </div>
+        <div class="col-7">
+            <h4 class="text-success text-left align-baseline">Description: {{ description }}</h4>
         </div>
         <div class="col">
             <button type="submit" class="btn btn-outline-success">Edit payee</button>
