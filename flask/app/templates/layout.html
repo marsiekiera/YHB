@@ -52,17 +52,17 @@
             </form>
             {% if session.user_id %}
                 <form class="form-inline my-2 my-lg-0">
-                    <a href="/settings">
-                        {% if st_name == "Settings" %}
-                            <button  class="btn btn-outline-success" 
-                            type="button">
-                        {% else %}
-                            <button class="btn btn-sm btn-outline-secondary" 
-                            type="button">
-                        {% endif %}
-                            Settings
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Account Settings
                         </button>
-                    </a>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                          <a class="dropdown-item" href="/login_change">Change Login</a>
+                          <a class="dropdown-item" href="/password_change">Change Password</a>
+                          <div class="dropdown-divider"></div>
+                          <a class="dropdown-item" href="/account_delete">Delete Account</a>
+                        </div>
+                    </div>
                     <a href="/logout">
                         <button class="btn btn-sm btn-danger" type="button">
                             Logout
