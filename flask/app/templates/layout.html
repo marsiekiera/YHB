@@ -76,13 +76,9 @@
                 {% if messages %}
                     <header>
                         {% for category, message in messages %}
-                            {% if category == "info" %}
-                                <div class="alert alert-success border text-center" role="alert">
-                            {% elif category == "error" %}
-                                <div class="alert alert-danger border text-center" role="alert">
-                            {% endif %}
-                                    {{ message }}
-                                </div>
+                            <div class="alert alert-{{ category }} border text-center" role="alert">
+                                {{ message }}
+                            </div>
                         {% endfor %}
                     </header>
                 {% endif %}
