@@ -65,14 +65,14 @@ def login():
             cur = con.cursor()
             user_name = str.lower(request.form.get("user_name"))
             if not user_name:
-                flash("Please provide User Name", "error")
+                flash("Please provide User Name", "danger")
                 return redirect("/login")
             cur.execute(
                 "SELECT * FROM users WHERE user_name = ?", (user_name,))
             records = cur.fetchall()
             # Check in database if user exists
             if not records:
-                flash("Incorrect user name", "error")
+                flash("Incorrect user name", "danger")
                 return redirect("/login")
             for row in records:
                 user_id = row[0]
@@ -81,18 +81,18 @@ def login():
             # Check correctness of password
             if not check_password_hash(hash_password, 
                                        request.form.get("password")):
-                flash("Incorrect password", "error")
+                flash("Incorrect password", "danger")
                 return redirect("/login")
             # Remember which user has logged in
             session["user_id"] = user_id
             session["user_name"] = user_name
         con.close()
 
-        flash("You were successfully logged in", "info")
+        flash("You were successfully logged in", "success")
         return redirect("/")
     else:
         if 'user_id' in session:
-            flash("You are already logged in", "info")
+            flash("You are already logged in", "success")
             return redirect("/")
         else:
             return render_template("login.html")
@@ -108,25 +108,25 @@ def register():
             cur = con.cursor()
             user_name = str.lower(request.form.get("user_name"))
             if not user_name:
-                flash("Please provide User Name", "error")
+                flash("Please provide User Name", "danger")
                 return redirect("/register")
             # Check in database if user already exists
             cur.execute("SELECT * FROM users WHERE user_name = ?", 
                         (user_name,))
             if cur.fetchone():
-                flash("User already exists", "error")
+                flash("User already exists", "danger")
                 return redirect("/register")
             # Check correctness of password
             if not request.form.get("password"):
-                flash("Please provide password", "error")
+                flash("Please provide password", "danger")
                 return redirect("/register")
             if not request.form.get("re_password") or request.form.get("password") != request.form.get("re_password"):
-                flash("Please re-type the same password", "error")
+                flash("Please re-type the same password", "danger")
                 return redirect("/register")
             elif not check_password(request.form.get("password")):
                 flash(
                     """Please provide password with at least one uppercase and 
-                    lowercase letter, a number and a symbol.""", "error")
+                    lowercase letter, a number and a symbol.""", "danger")
                 return redirect("/register")
             # Create hash password
             hash_password = generate_password_hash(
@@ -136,7 +136,7 @@ def register():
                         (user_name, hash_password))
             con.commit()
         con.close()
-        flash("You have successfully register. You can login now.", "info")
+        flash("You have successfully register. You can login now.", "success")
         return redirect("/login")
     else:
         return render_template("register.html")
@@ -147,7 +147,7 @@ def logout():
     """Log user out"""
     # Forget any user_id
     session.clear()
-    flash("You have been successfully logged out.", "info")
+    flash("You have been successfully logged out.", "success")
     return redirect("/")
 
 
@@ -167,8 +167,9 @@ def accounts():
             (user_id,))
         user_accounts = cur.fetchall()
         if not user_accounts:
-            flash("You don't have any account", "error")
-            return redirect("/")
+            flash("You don't have any account yet. Please create new account", 
+                  "warning")
+            return redirect("/add_account")
         total_accounts = 0 # total balance all accounts
         for acc in user_accounts:
             account_dict = {}
@@ -215,7 +216,7 @@ def add_account():
                 """SELECT * FROM account WHERE user_id = ? 
                 AND account_name = ?""", (user_id, account_name))
             if cur.fetchone():
-                flash("You already have an account with that name", "error")
+                flash("You already have an account with that name", "danger")
                 return redirect("/add_account")
             if not request.form.get("starting_balance"):
                 starting_balance = 0.00
@@ -230,7 +231,7 @@ def add_account():
             con.commit()  
         con.close()
 
-        flash("You have successfully add new account", "info")
+        flash("You have successfully add new account", "success")
         return redirect("/")
     else:
         return render_template("account_add.html")
@@ -254,7 +255,7 @@ def edit_account(account_name):
             con.commit()
         con.close
         session['account_name'] = new_account_name
-        flash("Changes saved", "info")
+        flash("Changes saved", "success")
         return redirect(f"/account/{ session['account_name'] }")
     else:
         with sql.connect("sqlite.db") as con:
@@ -314,7 +315,7 @@ def add_transaction():
     trans_type = int(request.form.get("transaction_type"))
     print(amount_form)
     if not only_digit(amount_form):
-        flash("Amount incorrect", "error")
+        flash("Amount incorrect", "danger")
         return redirect(f"/account/{ session['account_name'] }")
     amount = amount_uni(amount_form) * trans_type
     # Connect with database
@@ -335,7 +336,7 @@ def add_transaction():
             category_id, amount, user_id, account_id))
         con.commit()      
     con.close()
-    flash("Transaction successfully added", "info")
+    flash("Transaction successfully added", "success")
     return redirect(f"/account/{ session['account_name'] }")
 
 
@@ -376,7 +377,7 @@ def transaction(transaction_id):
                 account_id, transaction_id))
             con.commit()
         con.close()
-        flash("Transaction successfully edited", "info")
+        flash("Transaction successfully edited", "success")
         return redirect(f"/transaction/{ transaction_id }")
     else:
         transaction_id = int(transaction_id)
@@ -389,7 +390,7 @@ def transaction(transaction_id):
             if (not transaction_db 
                 or transaction_id != transaction_db[0] 
                 or session["user_id"] != transaction_db[5]):
-                flash("Database error. Contact with admin", "error")
+                flash("Database error. Contact with admin", "danger")
                 return redirect("/")
             date = transaction_db[1]
             payee_id = transaction_db[2]
@@ -432,7 +433,7 @@ def delete_transaction(transaction_id):
                     (transaction_id,))
         con.commit()
     con.close()
-    flash("Transaction deleted", "info")
+    flash("Transaction deleted", "success")
     return redirect(f"/account/{ session['account_name'] }")
 
 
@@ -465,7 +466,7 @@ def payee_add():
                     session["user_id"], request.form.get("description")))
         con.commit()
     con.close()
-    flash("Payee added", "info")
+    flash("Payee added", "success")
     return redirect("/payees")
 
 
@@ -532,7 +533,7 @@ def payee_edit(payee_id):
                         (new_payee_name, new_description, payee_id,))
             con.commit()
         con.close()
-        flash("Payee successfully edited", "info")
+        flash("Payee successfully edited", "success")
         return redirect(f"/payee/{payee_id}")
     else:
         with sql.connect("sqlite.db") as con:
@@ -541,7 +542,7 @@ def payee_edit(payee_id):
             payee_db = cur.fetchall()[0]
             user_id = payee_db[2]
             if user_id != session["user_id"]:
-                flash("Error", "error")
+                flash("Error", "danger")
                 return redirect("/")
             payee_name = payee_db[1]
             description = payee_db[3]
@@ -673,11 +674,11 @@ def settings():
             hash_db = cur.fetchone()[0]
             # Check in database if user exists
             if not hash_db:
-                flash("Error in database", "error")
+                flash("Error in database", "danger")
                 return redirect("/")
             # Check correctness of password
             if not check_password_hash(hash_db, request.form.get("password")):
-                flash("Incorrect password", "error")
+                flash("Incorrect password", "danger")
                 return redirect("/")
             cur.execute("DELETE FROM transactions WHERE user_id = ?", 
                         (user_id,))
@@ -688,7 +689,7 @@ def settings():
             con.commit()
         con.close()
         session.clear()
-        flash("Account deleted", "info")
+        flash("Account deleted", "success")
         return redirect("/")
     else:
         return render_template("user_delete.html")
