@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Delete Your Account
+{% endblock %}
+
+{% block main %}
+<form action="/user_delete" method="POST">
+  <div class="form-row">
+    <div class="form-group col">
+      <input type="password" class="form-control" name="password" autocomplete="off" >
+      <label for="password">Password</label>
+    </div>
+    <div class="col">
+      <button type="submit" class="btn btn-danger">Delete Your Account</button>
+    </div>
+  <div>
+</form>
+{% endblock %}
