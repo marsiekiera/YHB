@@ -644,8 +644,51 @@ def category_edit(category_id):
     return redirect("/")
 
 
-@app.route("/settings")
+@app.route("/login_change", methods=["POST", "GET"])
+@login_required
+def login_change():
+    if request.method == "POST":
+        return redirect("/")
+    else:
+        return render_template("login_change.html")
+
+
+@app.route("/password_change", methods=["POST", "GET"])
+@login_required
+def password_change():
+    if request.method == "POST":
+        return redirect("/")
+    else:
+        return render_template("password_change.html")
+
+
+@app.route("/user_delete", methods=["POST", "GET"])
 @login_required
 def settings():
-    # TO DO
-    return redirect("/")
+    if request.method == "POST":
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+            user_id = session["user_id"]
+            cur.execute("SELECT hash FROM users WHERE user_id = ?",(user_id,))
+            hash_db = cur.fetchone()[0]
+            # Check in database if user exists
+            if not hash_db:
+                flash("Error in database", "error")
+                return redirect("/")
+            # Check correctness of password
+            if not check_password_hash(hash_db, request.form.get("password")):
+                flash("Incorrect password", "error")
+                return redirect("/")
+            cur.execute("DELETE FROM transactions WHERE user_id = ?", 
+                        (user_id,))
+            cur.execute("DELETE FROM payee WHERE user_id = ?", (user_id,))
+            cur.execute("DELETE FROM category WHERE user_id = ?", (user_id,))
+            cur.execute("DELETE FROM account WHERE user_id = ?", (user_id,))
+            cur.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
+            con.commit()
+        con.close()
+        session.clear()
+        flash("Account deleted", "info")
+        return redirect("/")
+    else:
+        return render_template("user_delete.html")
