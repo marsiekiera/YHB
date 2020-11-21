@@ -206,33 +206,38 @@ def transfer():
 def add_account():
     """Create new user's account"""
     if request.method == "POST":
-        # connect with database
-        with sql.connect("sqlite.db") as con:
-            cur = con.cursor()
-            user_id = session["user_id"]
-            account_name = request.form.get("account_name")
-            # Check in database if user already have account with that name
-            cur.execute(
-                """SELECT * FROM account WHERE user_id = ? 
-                AND account_name = ?""", (user_id, account_name))
-            if cur.fetchone():
-                flash("You already have an account with that name", "danger")
-                return redirect("/add_account")
-            if not request.form.get("starting_balance"):
-                starting_balance = 0.00
-            else:
-                starting_balance = round(float(
-                    request.form.get("starting_balance").replace(',','.')), 2)
-            # Add new user's account to database
-            cur.execute(
-                """INSERT INTO account 
-                (account_name, user_id, starting_balance) VALUES (?, ?, ?)""", 
-                (account_name, user_id, starting_balance))
-            con.commit()  
-        con.close()
-
-        flash("You have successfully add new account", "success")
-        return redirect("/")
+        if not request.form.get("account_name"):
+            flash("You must enter the name of the account", "danger")
+        else:
+            # connect with database
+            with sql.connect("sqlite.db") as con:
+                cur = con.cursor()
+                user_id = session["user_id"]
+                account_name = request.form.get("account_name")
+                # Check in database if user already use that account name
+                cur.execute(
+                    """SELECT * FROM account WHERE user_id = ? 
+                    AND account_name = ?""", (user_id, account_name))
+                if cur.fetchone():
+                    flash("You already have an account with that name", 
+                          "danger")
+                    return redirect("/add_account")
+                if not request.form.get("starting_balance"):
+                    starting_balance = 0.00
+                else:
+                    starting_balance = round(float(request.form.get
+                                             ("starting_balance").replace
+                                             (',','.')), 2)
+                # Add new user's account to database
+                cur.execute(
+                    """INSERT INTO account 
+                    (account_name, user_id, starting_balance) 
+                    VALUES (?, ?, ?)""", 
+                    (account_name, user_id, starting_balance))
+                con.commit()  
+            con.close()
+            flash("You have successfully add new account", "success")
+        return redirect("/accounts")
     else:
         return render_template("account_add.html")
 
@@ -445,11 +450,16 @@ def payees():
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         payee_list_dict = payee_list_from_db(session["user_id"], cur)
-        for payee in payee_list_dict:
-            cur.execute(
-                "SELECT MAX(date) FROM transactions WHERE payee_id = ?",
-                (payee["payee_id"],))
-            payee["last_paid"] = cur.fetchone()[0]
+        if not payee_list_dict:
+            payee_list_dict = []
+            flash("You don't have any payee yet. Please create new payee",
+                   "warning")
+        else:
+            for payee in payee_list_dict:
+                cur.execute(
+                    "SELECT MAX(date) FROM transactions WHERE payee_id = ?",
+                    (payee["payee_id"],))
+                payee["last_paid"] = cur.fetchone()[0]
     con.close()
     return render_template("payees.html", payee_list_dict=payee_list_dict, 
                            st_name=st_name)
@@ -459,14 +469,18 @@ def payees():
 @login_required
 def payee_add():
     """Add new payee"""
-    with sql.connect("sqlite.db") as con:
-        cur = con.cursor()
-        cur.execute("""INSERT INTO payee (payee_name, user_id, description) 
-                    VALUES (?, ?, ?)""", (request.form.get("payee_name"),
-                    session["user_id"], request.form.get("description")))
-        con.commit()
-    con.close()
-    flash("Payee added", "success")
+    if not request.form.get("payee_name"):
+        flash("You must enter the name of the payee", "danger")
+    else:
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+            cur.execute(
+                """INSERT INTO payee (payee_name, user_id, description) 
+                VALUES (?, ?, ?)""", (request.form.get("payee_name"),
+                session["user_id"], request.form.get("description")))
+            con.commit()
+        con.close()
+        flash("Payee added", "success")
     return redirect("/payees")
 
 
@@ -559,11 +573,17 @@ def categories():
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
         category_list_dict = category_list_from_db(session['user_id'], cur)
-        for cat in category_list_dict:
-            cur.execute(
-                "SELECT MAX(date) FROM transactions WHERE category_id = ?",
-                (cat["category_id"],))
-            cat["last_paid"] = cur.fetchone()[0]
+        if not category_list_dict:
+            category_list_dict = []
+            flash(
+                "You don't have any category yet. Please create new category",
+                "warning")
+        else:
+            for cat in category_list_dict:
+                cur.execute(
+                    "SELECT MAX(date) FROM transactions WHERE category_id = ?",
+                    (cat["category_id"],))
+                cat["last_paid"] = cur.fetchone()[0]
     con.close()
     return render_template(
         "categories.html", category_list_dict=category_list_dict, 
@@ -574,20 +594,24 @@ def categories():
 @login_required
 def category_add():
     """Add new category"""
-    with sql.connect("sqlite.db") as con:
-        cur = con.cursor()
-        cur.execute(
-            """SELECT category_id FROM category 
-            WHERE category_name = ? AND user_id = ?""", 
-            (request.form.get("category_name"), session["user_id"]))
-        category_id = cur.fetchone()
-        if not category_id:
+    if not request.form.get("category_name"):
+        flash("You must enter the name of the category", "danger")
+    else:
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
             cur.execute(
-                """INSERT INTO category (category_name, user_id) 
-                VALUES (?, ?)""", 
-                (request.form.get("category_name"),session["user_id"]))
-            con.commit()
-    con.close()
+                """SELECT category_id FROM category 
+                WHERE category_name = ? AND user_id = ?""", 
+                (request.form.get("category_name"), session["user_id"]))
+            category_id = cur.fetchone()
+            if not category_id:
+                cur.execute(
+                    """INSERT INTO category (category_name, user_id) 
+                    VALUES (?, ?)""", 
+                    (request.form.get("category_name"),session["user_id"]))
+                con.commit()
+        con.close()
+        flash("Category added", "success")
     return redirect("/categories")
 
 

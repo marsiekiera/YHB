@@ -42,8 +42,7 @@ def payee_list_from_db(user_id, cur):
         ORDER BY payee_name COLLATE NOCASE ASC""",(user_id,))
     payee_db = cur.fetchall()
     if not payee_db:
-        flash("You need to add payee before", 'error')
-        return redirect("/payees")
+        return False
     for pay in payee_db:
         payee_dict = {}
         payee_dict["payee_id"] = pay[0]
@@ -61,8 +60,7 @@ def category_list_from_db(user_id, cur):
         ORDER BY category_name COLLATE NOCASE ASC""", (user_id,))
     category_db = cur.fetchall()
     if not category_db:
-        flash("You need to add category before", "error")
-        return redirect("/categories")
+        return False
     for category in category_db:
         category_dict = {}
         category_dict["category_id"] = category[0]
