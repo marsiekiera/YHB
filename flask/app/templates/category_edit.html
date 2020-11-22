@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Edit category
+{% endblock %}
+
+{% block main %}
+<h3 class="text-success text-center">Edit category: <span class="font-weight-bolder">{{ category_name }}</span></h3>
+<form action="/category_edit/{{ category_id }}" method="POST">
+    <div class="form-row">
+        <div class="form-group col">
+            <input class="form-control" autocomplete="off" placeholder="Category name" name="category_name" type="text" value="{{ category_name }}">
+            <label for="category_name">Category name</label>
+        </div>
+        <div class="col">
+            <button class="btn btn-success" type="submit">Save changes</button>
+        </div>
+    </div>
+</form>
+<form action="/category/{{ category_id }}">
+    <div class="form-row">
+        <button class="btn btn-danger" type="submit">Cancel</button>
+    </div>
+</form>
+{% endblock %}
