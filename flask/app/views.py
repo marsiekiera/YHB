@@ -758,10 +758,42 @@ def login_change():
 @app.route("/password_change", methods=["POST", "GET"])
 @login_required
 def password_change():
+    """User password change"""
     if request.method == "POST":
+        if not request.form.get("password"):
+            flash("You must provide correct current password", "danger")
+            return redirect("/password_change")
+        if not request.form.get("new_password"):
+            flash("You must provide new password", "danger")
+            return redirect("/password_change")
+        if (request.form.get("re_password") != 
+            request.form.get("new_password")):
+            flash("You must correct re-type new password", "danger")
+            return redirect("/password_change")
+        # connect with database
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+            # Password check
+            cur.execute("SELECT hash FROM users WHERE user_id = ?", 
+                        (session["user_id"],))
+            hash_password = cur.fetchone()[0]
+            if not check_password_hash(hash_password, 
+                                       request.form.get("password")):
+                flash("Incorrect current password", "danger")
+                return redirect("/password_change")
+            # Create hash password
+            hash_password = generate_password_hash(
+                request.form.get("new_password"))
+            # Change user password in database
+            cur.execute("UPDATE users SET hash = ? WHERE user_id = ?",
+                        (hash_password, session["user_id"]))
+            con.commit()
+        con.close()
+        flash("You have successfully change your password", "success")
         return redirect("/")
     else:
-        return render_template("password_change.html")
+        return render_template("user_password.html", 
+                               user_name=session["user_name"])
 
 
 @app.route("/user_delete", methods=["POST", "GET"])
