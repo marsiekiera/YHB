@@ -331,9 +331,6 @@ def add_transaction():
         flash("Amount incorrect", "danger")
         return redirect(f"/account/{ session['account_name'] }")
     amount = amount_uni(amount_form) * trans_type
-    print(f"payye {request.form.get('payee')}")
-    print(f"cat {request.form.get('category')}")
-    print(f"date {request.form.get('date')}")
     if (request.form.get("payee") == None 
         or request.form.get("category") == None):
         flash("Please choose payee and category", "danger")
@@ -675,16 +672,43 @@ def category(category_id):
             if acc["account_id"] == tran[6]:
                 tran_dict["account_name"] = acc["account_name"]
         trans_list_dict.append(tran_dict)
-
     return render_template("category.html", category_name=category_name, 
-                           trans_list_dict=trans_list_dict, total=total)
+                           trans_list_dict=trans_list_dict, total=total,
+                           category_id=category_id)
 
 
 @app.route("/category_edit/<category_id>", methods=["POST", "GET"])
 @login_required
 def category_edit(category_id):
-    # TO DO
-    return redirect("/")
+    """Edit detail of category"""
+    if request.method == "POST":
+        new_category_name = request.form.get("category_name")
+        if not new_category_name:
+            flash("Please enter new category name", "danger")
+            return redirect(f"/category_edit/{category_id}")
+        else:
+            with sql.connect("sqlite.db") as con:
+                cur = con.cursor()
+                cur.execute("""UPDATE category SET category_name = ?
+                            WHERE category_id = ?""", 
+                            (new_category_name, category_id,))
+                con.commit()
+            con.close()
+            flash("Payee successfully edited", "success")
+        return redirect(f"/category/{category_id}")
+    else:
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+            cur.execute("SELECT * FROM category WHERE category_id = ?", (category_id,))
+            category_db = cur.fetchall()[0]
+            user_id = category_db[2]
+            if user_id != session["user_id"]:
+                flash("Error", "danger")
+                return redirect("/")
+            category_name = category_db[1]
+        con.close()
+        return render_template("category_edit.html", category_id=category_id, 
+                               category_name=category_name)
 
 
 @app.route("/login_change", methods=["POST", "GET"])
