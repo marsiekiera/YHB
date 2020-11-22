@@ -208,6 +208,7 @@ def add_account():
     if request.method == "POST":
         if not request.form.get("account_name"):
             flash("You must enter the name of the account", "danger")
+            return redirect("/add_account")
         else:
             # connect with database
             with sql.connect("sqlite.db") as con:
@@ -293,14 +294,22 @@ def account(account_name):
         starting_balance = account_db[3]
         # user's payee list of dict using payee_list function
         payee_list_dict = payee_list_from_db(user_id, cur)
+        if not payee_list_dict:
+            payee_list_dict = []
         # user's category list of dict using category_list function
         category_list_dict = category_list_from_db(user_id, cur)
+        if not category_list_dict:
+            category_list_dict = []
         # user's transactions list of dict using transaction_list function
         trans_list_dict_db = transaction_list_from_db(user_id, cur, 
                                                       payee_list_dict, 
                                                       category_list_dict)
-        trans_list_dict = trans_list_dict_db[0]
-        total = trans_list_dict_db[1] + starting_balance
+        if not trans_list_dict_db:
+            trans_list_dict = []
+            total = starting_balance
+        else:
+            trans_list_dict = trans_list_dict_db[0]
+            total = trans_list_dict_db[1] + starting_balance
     con.close()
 
     return render_template("account.html", account_name=account_name, 
