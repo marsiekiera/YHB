@@ -78,6 +78,8 @@ def transaction_list_from_db(
         """SELECT * FROM transactions WHERE user_id = ? AND account_id = ? 
         ORDER BY date""", (user_id, session["account_id"]))
     trans_db = cur.fetchall()
+    if not trans_db:
+        return False
     total = 0
     for tran in trans_db:
         tran_dict = {}
