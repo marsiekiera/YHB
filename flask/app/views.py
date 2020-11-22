@@ -691,12 +691,14 @@ def password_change():
 @login_required
 def settings():
     if request.method == "POST":
+        if not request.form.get("password"):
+            flash("You must enter a password", "danger")
+            return redirect("/user_delete")
         with sql.connect("sqlite.db") as con:
             cur = con.cursor()
             user_id = session["user_id"]
             cur.execute("SELECT hash FROM users WHERE user_id = ?",(user_id,))
             hash_db = cur.fetchone()[0]
-            # Check in database if user exists
             if not hash_db:
                 flash("Error in database", "danger")
                 return redirect("/")
@@ -716,4 +718,5 @@ def settings():
         flash("Account deleted", "success")
         return redirect("/")
     else:
-        return render_template("user_delete.html")
+        return render_template("user_delete.html", 
+                               user_name=session["user_name"])

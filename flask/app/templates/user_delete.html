@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block main %}
+<h3 class="text-success text-center">Login: <span class="font-weight-bolder">{{ user_name }}</span></h3>
 <form action="/user_delete" method="POST">
   <div class="form-row">
     <div class="form-group col">
@@ -13,6 +14,7 @@
     </div>
     <div class="col">
       <button type="submit" class="btn btn-danger">Delete Your Account</button>
+      <small class="form-text text-muted">This operation cannot be undone</small>
     </div>
   <div>
 </form>
