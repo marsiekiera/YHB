@@ -327,11 +327,20 @@ def add_transaction():
     # Amount
     amount_form = request.form.get("amount")
     trans_type = int(request.form.get("transaction_type"))
-    print(amount_form)
-    if not only_digit(amount_form):
+    if not only_digit(amount_form) or not amount_form:
         flash("Amount incorrect", "danger")
         return redirect(f"/account/{ session['account_name'] }")
     amount = amount_uni(amount_form) * trans_type
+    print(f"payye {request.form.get('payee')}")
+    print(f"cat {request.form.get('category')}")
+    print(f"date {request.form.get('date')}")
+    if (request.form.get("payee") == None 
+        or request.form.get("category") == None):
+        flash("Please choose payee and category", "danger")
+        return redirect(f"/account/{ session['account_name'] }")
+    if not request.form.get("date"):
+        flash("Please enter correct date", "danger")
+        return redirect(f"/account/{ session['account_name'] }")
     # Connect with database
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
