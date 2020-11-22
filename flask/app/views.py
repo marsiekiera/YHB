@@ -310,6 +310,7 @@ def account(account_name):
         else:
             trans_list_dict = trans_list_dict_db[0]
             total = trans_list_dict_db[1] + starting_balance
+        total = round(float(total), 2)
     con.close()
 
     return render_template("account.html", account_name=account_name, 
@@ -714,10 +715,44 @@ def category_edit(category_id):
 @app.route("/login_change", methods=["POST", "GET"])
 @login_required
 def login_change():
+    """User login change"""
     if request.method == "POST":
+        new_user_name = str.lower(request.form.get("new_user_name"))
+        if not new_user_name:
+            flash("You must provide new Login", "danger")
+            return redirect("/login_change")
+        if not request.form.get("password"):
+            flash("You must provide password", "danger")
+            return redirect("/login_change")
+        # connect with database
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+            # Password check
+            cur.execute("SELECT hash FROM users WHERE user_id = ?", 
+                        (session["user_id"],))
+            hash_password = cur.fetchone()[0]
+            if not check_password_hash(hash_password, 
+                                       request.form.get("password")):
+                flash("Incorrect password", "danger")
+                return redirect("/login_change")
+            # Check in database if user with that name already exists
+            cur.execute("SELECT * FROM users WHERE user_name = ?", 
+                        (new_user_name,))
+            if cur.fetchone():
+                flash("User already exists", "danger")
+                return redirect("/login_change")
+            # Change user login in database
+            cur.execute("UPDATE users SET user_name = ? WHERE user_id = ?",
+                        (new_user_name, session["user_id"]))
+            con.commit()
+        con.close()
+        session["user_name"] = new_user_name
+        flash(f"You have successfully change your login to: {new_user_name}",
+              "success")
         return redirect("/")
     else:
-        return render_template("login_change.html")
+        return render_template("user_login.html", 
+                               user_name=session["user_name"])
 
 
 @app.route("/password_change", methods=["POST", "GET"])
