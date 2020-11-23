@@ -107,9 +107,6 @@ def account_list_from_db(user_id, cur):
     cur.execute("""SELECT * FROM account WHERE user_id = ? 
         ORDER BY account_name COLLATE NOCASE ASC""", (user_id,))
     account_db = cur.fetchall()
-    if not account_db:
-        flash("You need to add category before", "error")
-        return redirect("/add_account")
     for acc in account_db:
         account_dict = {}
         account_dict["account_id"] = acc["account_id"]
