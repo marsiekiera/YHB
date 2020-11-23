@@ -45,10 +45,10 @@ def payee_list_from_db(user_id, cur):
         return False
     for pay in payee_db:
         payee_dict = {}
-        payee_dict["payee_id"] = pay[0]
-        payee_dict["payee_name"] = pay[1]
-        payee_dict["user_id"] = pay[2]
-        payee_dict["description"] = pay[3]
+        payee_dict["payee_id"] = pay["payee_id"]
+        payee_dict["payee_name"] = pay["payee_name"]
+        payee_dict["user_id"] = pay["user_id"]
+        payee_dict["description"] = pay["description"]
         payee_list_dict.append(payee_dict)
     return payee_list_dict
 
@@ -63,9 +63,9 @@ def category_list_from_db(user_id, cur):
         return False
     for category in category_db:
         category_dict = {}
-        category_dict["category_id"] = category[0]
-        category_dict["category_name"] = category[1]
-        category_dict["user_id"] = category[2]
+        category_dict["category_id"] = category["category_id"]
+        category_dict["category_name"] = category["category_name"]
+        category_dict["user_id"] = category["user_id"]
         category_list_dict.append(category_dict)
     return category_list_dict
 
@@ -83,20 +83,20 @@ def transaction_list_from_db(
     total = 0
     for tran in trans_db:
         tran_dict = {}
-        tran_dict["transaction_id"] = tran[0]
-        tran_dict["date"] = tran[1]
-        tran_dict["payee_id"] = tran[2]
+        tran_dict["transaction_id"] = tran["transaction_id"]
+        tran_dict["date"] = tran["date"]
+        tran_dict["payee_id"] = tran["payee_id"]
         for pay in payee_list_dict:
-            if pay["payee_id"] == tran[2]:
+            if pay["payee_id"] == tran["payee_id"]:
                 tran_dict["payee_name"] = pay["payee_name"]
-        tran_dict["category_id"] = tran[3]
+        tran_dict["category_id"] = tran["category_id"]
         for cat in category_list_dict:
-            if cat["category_id"] == tran[3]:
+            if cat["category_id"] == tran["category_id"]:
                 tran_dict["category_name"] = cat["category_name"]
-        tran_dict["amount"] = tran[4]
-        total = round(float(total + tran[4]), 2)
-        tran_dict["user_id"] = tran[5]
-        tran_dict["account_id"] = tran[6]
+        tran_dict["amount"] = tran["amount"]
+        total = round(float(total + tran["amount"]), 2)
+        tran_dict["user_id"] = tran["user_id"]
+        tran_dict["account_id"] = tran["account_id"]
         trans_list_dict.append(tran_dict)
     return [trans_list_dict, total]
 
@@ -112,11 +112,11 @@ def account_list_from_db(user_id, cur):
         return redirect("/add_account")
     for acc in account_db:
         account_dict = {}
-        account_dict["account_id"] = acc[0]
-        account_dict["account_name"] = acc[1]
-        account_dict["user_id"] = acc[2]
-        account_dict["starting_balance"] = acc[3]
-        account_dict["account_hide"] = acc[4]
+        account_dict["account_id"] = acc["account_id"]
+        account_dict["account_name"] = acc["account_name"]
+        account_dict["user_id"] = acc["user_id"]
+        account_dict["starting_balance"] = acc["starting_balance"]
+        account_dict["account_hide"] = acc["account_hide"]
         account_list_dict.append(account_dict)
     return account_list_dict
 

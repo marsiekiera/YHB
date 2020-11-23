@@ -75,9 +75,9 @@ def login():
                 flash("Incorrect user name", "danger")
                 return redirect("/login")
             for row in records:
-                user_id = row[0]
-                user_name = row[1]
-                hash_password = row[2]
+                user_id = row["user_id"]
+                user_name = row["user_name"]
+                hash_password = row["hash"]
             # Check correctness of password
             if not check_password_hash(hash_password, 
                                        request.form.get("password")):
@@ -104,7 +104,6 @@ def register():
     if request.method == "POST":
         # connect with database
         with sql.connect("sqlite.db") as con:
-            con.row_factory = sql.Row
             cur = con.cursor()
             user_name = str.lower(request.form.get("user_name"))
             if not user_name:
@@ -160,6 +159,7 @@ def accounts():
     user_id = session["user_id"]
     user_accounts_list = []
     with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
         cur = con.cursor()
         cur.execute(
             """SELECT * FROM account WHERE user_id = ? 
@@ -173,19 +173,19 @@ def accounts():
         total_accounts = 0 # total balance all accounts
         for acc in user_accounts:
             account_dict = {}
-            account_dict["account_id"] = acc[0]
-            account_dict["account_name"] = acc[1]
+            account_dict["account_id"] = acc["account_id"]
+            account_dict["account_name"] = acc["account_name"]
             balance = acc[3] # starting balance
             cur.execute("""SELECT * FROM transactions 
                         WHERE user_id = ? AND account_id = ?""", 
                         (user_id, account_dict["account_id"]))
             trans_db = cur.fetchall()
             for tran in trans_db:
-                balance = round(float(balance + tran[4]), 2)
+                balance = round(float(balance + tran["amount"]), 2)
             account_dict["balance"] = balance # current balance
             total_accounts += balance
             total_accounts = round(float(total_accounts), 2)
-            account_dict["account_hide"] = acc[4]
+            account_dict["account_hide"] = acc["starting_balance"]
             user_accounts_list.append(account_dict)
     con.close()
 
@@ -265,12 +265,13 @@ def edit_account(account_name):
         return redirect(f"/account/{ session['account_name'] }")
     else:
         with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
             cur = con.cursor()
             cur.execute("""SELECT * FROM account WHERE account_id = ?""", 
                         (session["account_id"],))
             account_db = cur.fetchall()[0]
-            starting_balance = account_db[3]
-            account_hide = int(account_db[4])
+            starting_balance = account_db["starting_balance"]
+            account_hide = int(account_db["account_hide"])
         con.close()
         return render_template("account_edit.html", account_name=account_name,
         starting_balance=starting_balance, account_hide=account_hide)
@@ -285,13 +286,14 @@ def account(account_name):
     today = datetime.now().strftime('%Y-%m-%d')
 
     with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
         cur = con.cursor()
         # create session account id
         cur.execute("""SELECT * FROM account WHERE user_id = ? 
             AND account_name = ?""", (user_id, account_name))
         account_db = cur.fetchall()[0]
-        session["account_id"] = account_db[0]
-        starting_balance = account_db[3]
+        session["account_id"] = account_db["account_id"]
+        starting_balance = account_db["starting_balance"]
         # user's payee list of dict using payee_list function
         payee_list_dict = payee_list_from_db(user_id, cur)
         if not payee_list_dict:
@@ -366,6 +368,7 @@ def add_transaction():
 def transaction(transaction_id):
     """Edit transaction"""
     with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
         cur =  con.cursor()
         # user's payee list of dict using payee_list function
         payee_list_dict = payee_list_from_db(session["user_id"], cur)
@@ -403,21 +406,22 @@ def transaction(transaction_id):
     else:
         transaction_id = int(transaction_id)
         with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
             cur = con.cursor()
             cur.execute(
                 "SELECT * FROM transactions WHERE transaction_id = ?", 
                 (transaction_id,))
             transaction_db = cur.fetchone()
             if (not transaction_db 
-                or transaction_id != transaction_db[0] 
-                or session["user_id"] != transaction_db[5]):
+                or transaction_id != transaction_db["transaction_id"] 
+                or session["user_id"] != transaction_db["user_id"]):
                 flash("Database error. Contact with admin", "danger")
                 return redirect("/")
-            date = transaction_db[1]
-            payee_id = transaction_db[2]
-            category_id = transaction_db[3]
-            amount = transaction_db[4]
-            account_id = transaction_db[6]
+            date = transaction_db["date"]
+            payee_id = transaction_db["payee_id"]
+            category_id = transaction_db["category_id"]
+            amount = transaction_db["amount"]
+            account_id = transaction_db["account_id"]
             if amount > 0:
                 tran_type = "Deposit"
             else:
@@ -464,6 +468,7 @@ def payees():
     """List of all user's payees"""
     st_name = "Payees"
     with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
         cur = con.cursor()
         payee_list_dict = payee_list_from_db(session["user_id"], cur)
         if not payee_list_dict:
@@ -505,12 +510,13 @@ def payee_add():
 def payee(payee_id):
     """Preview of selected payee"""
     with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
         cur = con.cursor()
         # payee name
         cur.execute("SELECT * FROM payee WHERE payee_id = ?", (payee_id,))
         payee_db = cur.fetchall()[0]
-        payee_name = payee_db[1]
-        description = payee_db[3]
+        payee_name = payee_db["payee_name"]
+        description = payee_db["description"]
         if description == None:
             description = ""
         # category list
@@ -527,20 +533,20 @@ def payee(payee_id):
     trans_list_dict = []
     for tran in trans_db:
         tran_dict = {}
-        tran_dict["transaction_id"] = tran[0]
-        tran_dict["date"] = tran[1]
-        tran_dict["payee_id"] = tran[2]
+        tran_dict["transaction_id"] = tran["transaction_id"]
+        tran_dict["date"] = tran["date"]
+        tran_dict["payee_id"] = tran["payee_id"]
         tran_dict["payee_name"] = payee_name
-        tran_dict["category_id"] = tran[3]
+        tran_dict["category_id"] = tran["category_id"]
         for cat in category_list_dict:
-            if cat["category_id"] == tran[3]:
+            if cat["category_id"] == tran["category_id"]:
                 tran_dict["category_name"] = cat["category_name"]
-        tran_dict["amount"] = tran[4]
-        total = round(float(total + tran[4]), 2)
-        tran_dict["user_id"] = tran[5]
-        tran_dict["account_id"] = tran[6]
+        tran_dict["amount"] = tran["amount"]
+        total = round(float(total + tran["amount"]), 2)
+        tran_dict["user_id"] = tran["user_id"]
+        tran_dict["account_id"] = tran["account_id"]
         for acc in account_list_dict:
-            if acc["account_id"] == tran[6]:
+            if acc["account_id"] == tran["account_id"]:
                 tran_dict["account_name"] = acc["account_name"]
         trans_list_dict.append(tran_dict)
 
@@ -567,15 +573,16 @@ def payee_edit(payee_id):
         return redirect(f"/payee/{payee_id}")
     else:
         with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
             cur = con.cursor()
             cur.execute("SELECT * FROM payee WHERE payee_id = ?", (payee_id,))
             payee_db = cur.fetchall()[0]
-            user_id = payee_db[2]
+            user_id = payee_db["user_id"]
             if user_id != session["user_id"]:
                 flash("Error", "danger")
                 return redirect("/")
-            payee_name = payee_db[1]
-            description = payee_db[3]
+            payee_name = payee_db["payee_name"]
+            description = payee_db["description"]
         con.close()
         return render_template("payee_edit.html", payee_id=payee_id, 
                                payee_name=payee_name, description=description)
@@ -587,6 +594,7 @@ def categories():
     """List of all user's categories"""
     st_name = "Categories"
     with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
         cur = con.cursor()
         category_list_dict = category_list_from_db(session['user_id'], cur)
         if not category_list_dict:
@@ -636,6 +644,7 @@ def category_add():
 def category(category_id):
     """Preview of selected category"""
     with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
         cur = con.cursor()
         # payee name
         cur.execute(
@@ -657,20 +666,20 @@ def category(category_id):
     trans_list_dict = []
     for tran in trans_db:
         tran_dict = {}
-        tran_dict["transaction_id"] = tran[0]
-        tran_dict["date"] = tran[1]
-        tran_dict["payee_id"] = tran[2]
+        tran_dict["transaction_id"] = tran["transaction_id"]
+        tran_dict["date"] = tran["date"]
+        tran_dict["payee_id"] = tran["payee_id"]
         for pay in payee_list_dict:
-            if pay["payee_id"] == tran[2]:
+            if pay["payee_id"] == tran["payee_id"]:
                 tran_dict["payee_name"] = pay["payee_name"]
-        tran_dict["category_id"] = tran[3]
+        tran_dict["category_id"] = tran["category_id"]
         tran_dict["category_name"] = category_name
-        tran_dict["amount"] = tran[4]
-        total = round(float(total + tran[4]), 2)
-        tran_dict["user_id"] = tran[5]
-        tran_dict["account_id"] = tran[6]
+        tran_dict["amount"] = tran["amount"]
+        total = round(float(total + tran["amount"]), 2)
+        tran_dict["user_id"] = tran["user_id"]
+        tran_dict["account_id"] = tran["account_id"]
         for acc in account_list_dict:
-            if acc["account_id"] == tran[6]:
+            if acc["account_id"] == tran["account_id"]:
                 tran_dict["account_name"] = acc["account_name"]
         trans_list_dict.append(tran_dict)
     return render_template("category.html", category_name=category_name, 
@@ -699,14 +708,15 @@ def category_edit(category_id):
         return redirect(f"/category/{category_id}")
     else:
         with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
             cur = con.cursor()
             cur.execute("SELECT * FROM category WHERE category_id = ?", (category_id,))
             category_db = cur.fetchall()[0]
-            user_id = category_db[2]
+            user_id = category_db["user_id"]
             if user_id != session["user_id"]:
                 flash("Error", "danger")
                 return redirect("/")
-            category_name = category_db[1]
+            category_name = category_db["category_name"]
         con.close()
         return render_template("category_edit.html", category_id=category_id, 
                                category_name=category_name)
