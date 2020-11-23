@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Delete category
+{% endblock %}
+
+{% block main %}
+<h3 class="text-danger text-center">
+    Are you sure you want to delete the category: 
+    <span class="font-weight-bolder">{{ category_name }}</span>?
+</h3>
+
+<form action="/category_delete/{{ category_id }}" method="POST">
+    <div class="col text-center">
+        <button class="btn btn-danger btn-lg" type="submit">
+            Yes, Delete Category
+        </button>
+        <small class="form-text text-muted text-center">
+            This operation cannot be undone
+        </small>
+    </div>
+</form>
+
+<form action="/category/{{ category_id }}">
+    <div class="col mt-2 text-center">
+        <button class="btn btn-warning" type="submit">Cancel</button>
+    </div>
+</form>
+{% endblock %}
