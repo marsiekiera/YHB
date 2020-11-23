@@ -722,6 +722,31 @@ def category_edit(category_id):
                                category_name=category_name)
 
 
+@app.route("/category_delete/<category_id>", methods=["POST", "GET"])
+@login_required
+def category_delete(category_id):
+    """Delete category"""
+    if request.method == "POST":
+        with sql.connect("sqlite.db") as con:
+            cur = con.cursor()
+    
+        return redirect("/categories")
+    else:
+        with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
+            cur = con.cursor()
+            cur.execute("SELECT * FROM category WHERE category_id = ?", (category_id,))
+            category_db = cur.fetchall()[0]
+            user_id = category_db["user_id"]
+            if user_id != session["user_id"]:
+                flash("Error", "danger")
+                return redirect("/")
+            category_name = category_db["category_name"]
+        con.close()
+        return render_template("category_delete.html", category_id=category_id, 
+                               category_name=category_name)
+
+   
 @app.route("/login_change", methods=["POST", "GET"])
 @login_required
 def login_change():
