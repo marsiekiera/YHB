@@ -5,25 +5,50 @@
 {% endblock %}
 
 {% block main %}
-<h3 class="text-danger text-center">
+<h3 class="text-center mt-2 mb-4">
     Are you sure you want to delete the category: 
-    <span class="font-weight-bolder">{{ category_name }}</span>?
+    <span class="font-weight-bolder text-danger">{{ category_name }}?</span>
 </h3>
-
-<form action="/category_delete/{{ category_id }}" method="POST">
-    <div class="col text-center">
-        <button class="btn btn-danger btn-lg" type="submit">
-            Yes, Delete Category
-        </button>
-        <small class="form-text text-muted text-center">
-            This operation cannot be undone
-        </small>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-10">
+            <form action="/category_delete/{{ category_id }}" method="POST">
+                <div class="form-row">
+                    <div class="col text-center">
+                        <select name="category" type="text" class="form-control">
+                            <option value="" disabled selected>Category</option>
+                            {% for dict in category_list_dict %}
+                                {% if dict['category_name'] != category_name %}
+                                    <option value="{{ dict['category_name'] }}">
+                                        {{ dict['category_name'] }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted text-center">
+                            All transactions will be reassign to the category selected above if you delete the category
+                        </small>
+                    </div>
+                    <div class="col text-center">
+                        <button class="btn btn-danger" type="submit">
+                            Yes, Delete Category
+                        </button>
+                        <small class="form-text text-muted text-center">
+                            This operation cannot be undone
+                        </small>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-sm-2">
+            <form action="/category/{{ category_id }}">
+                <div class="col mt-2 text-center">
+                    <button class="btn btn-warning" type="submit">Cancel</button>
+                </div>
+            </form>
+        </div>
     </div>
-</form>
+</div>
 
-<form action="/category/{{ category_id }}">
-    <div class="col mt-2 text-center">
-        <button class="btn btn-warning" type="submit">Cancel</button>
-    </div>
-</form>
+
 {% endblock %}
