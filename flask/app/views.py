@@ -727,9 +727,27 @@ def category_edit(category_id):
 def category_delete(category_id):
     """Delete category"""
     if request.method == "POST":
+        if not request.form.get("category"):
+            flash("""Select the category to reassign transactions 
+            from the category you want to delete.""", "warning")
+            return redirect(f"/category_delete/{category_id}")
         with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
             cur = con.cursor()
-    
+            new_category = request.form.get("category")
+            cur.execute("""SELECT category_id FROM category 
+                        WHERE category_name = ? AND user_id = ?""", 
+                        (new_category, session["user_id"]))
+            new_category_id = cur.fetchone()[0]
+            cur.execute("""UPDATE transactions SET category_id = ? 
+                        WHERE user_id = ? AND category_id = ?""",
+                        (new_category_id, session["user_id"], category_id))
+            cur.execute("""DELETE FROM category 
+                        WHERE category_id = ? AND user_id = ?""", 
+                        (category_id, session["user_id"]))
+            con.commit()
+        con.close
+        flash("Category deleted", "success")
         return redirect("/categories")
     else:
         with sql.connect("sqlite.db") as con:
@@ -742,9 +760,16 @@ def category_delete(category_id):
                 flash("Error", "danger")
                 return redirect("/")
             category_name = category_db["category_name"]
+            category_list_dict = category_list_from_db(session["user_id"], 
+                                                       cur)
+            if len(category_list_dict) < 2:
+                flash("You need at least 2 categories", "warning")
+                return redirect(f"/category_edit/{category_id}")
+            print(f"length {len(category_list_dict)}")
         con.close()
         return render_template("category_delete.html", category_id=category_id, 
-                               category_name=category_name)
+                               category_name=category_name, 
+                               category_list_dict=category_list_dict)
 
    
 @app.route("/login_change", methods=["POST", "GET"])
