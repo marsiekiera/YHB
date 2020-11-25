@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Delete payee
+{% endblock %}
+
+{% block main %}
+<h3 class="text-center mt-2 mb-4">
+    Are you sure you want to delete the payee: 
+    <span class="font-weight-bolder text-danger">{{ payee_name }}?</span>
+</h3>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-10">
+            <form action="/payee_delete/{{ payee_id }}" method="POST">
+                <div class="form-row">
+                    <div class="col text-center">
+                        <select name="payee" type="text" class="form-control">
+                            <option value="" disabled selected>Payee</option>
+                            {% for dict in payee_list_dict %}
+                                {% if dict['payee_name'] != payee_name %}
+                                    <option value="{{ dict['payee_name'] }}">
+                                        {{ dict['payee_name'] }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted text-center">
+                            All transactions will be reassign to the payee selected above if you delete the payee
+                        </small>
+                    </div>
+                    <div class="col text-center">
+                        <button class="btn btn-danger" type="submit">
+                            Yes, Delete Payee
+                        </button>
+                        <small class="form-text text-muted text-center">
+                            This operation cannot be undone
+                        </small>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-sm-2">
+            <form action="/payee/{{ payee_id }}">
+                <div class="col mt-2 text-center">
+                    <button class="btn btn-warning" type="submit">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
