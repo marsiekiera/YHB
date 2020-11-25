@@ -459,7 +459,7 @@ def delete_transaction(transaction_id):
         con.commit()
     con.close()
     flash("Transaction deleted", "success")
-    return redirect(f"/accounts")
+    return redirect("/accounts")
 
 
 @app.route("/payees")
@@ -728,7 +728,7 @@ def category_delete(category_id):
     """Delete category"""
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
-        cur.execute("SELECT * FROM transactions WHERE category_id =?", 
+        cur.execute("SELECT * FROM transactions WHERE category_id = ?", 
                     (category_id,))
         transaction_exist = cur.fetchone()
     con.close()
@@ -748,7 +748,8 @@ def category_delete(category_id):
                 new_category_id = cur.fetchone()[0]
                 cur.execute("""UPDATE transactions SET category_id = ? 
                             WHERE user_id = ? AND category_id = ?""",
-                            (new_category_id, session["user_id"], category_id))
+                            (new_category_id, session["user_id"], 
+                            category_id))
             cur.execute("""DELETE FROM category 
                         WHERE category_id = ? AND user_id = ?""", 
                         (category_id, session["user_id"]))
@@ -760,12 +761,8 @@ def category_delete(category_id):
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
-            if transaction_exist:
-                flash("""You must first create a new category where 
-                      all transactions from the category you want 
-                      to delete will be reassigned""", "warning")
-                return redirect(f"/category_edit/{category_id}")
-            cur.execute("SELECT * FROM category WHERE category_id = ?", (category_id,))
+            cur.execute("SELECT * FROM category WHERE category_id = ?", 
+                        (category_id,))
             category_db = cur.fetchall()[0]
             user_id = category_db["user_id"]
             if user_id != session["user_id"]:
@@ -774,12 +771,14 @@ def category_delete(category_id):
             category_name = category_db["category_name"]
             category_list_dict = category_list_from_db(session["user_id"], 
                                                        cur)
-            # if len(category_list_dict) < 2:
-            #     flash("You need at least 2 categories", "warning")
-            #     return redirect(f"/category_edit/{category_id}")
-            print(f"length {len(category_list_dict)}")
+            if transaction_exist and len(category_list_dict) < 2:
+                flash("""You must first create a new category where 
+                      all transactions from the category you want 
+                      to delete will be reassigned""", "warning")
+                return redirect(f"/category_edit/{category_id}")
         con.close()
-        return render_template("category_delete.html", category_id=category_id, 
+        return render_template("category_delete.html", 
+                               category_id=category_id, 
                                category_name=category_name, 
                                category_list_dict=category_list_dict)
 
