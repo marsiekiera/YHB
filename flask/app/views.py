@@ -588,6 +588,67 @@ def payee_edit(payee_id):
                                payee_name=payee_name, description=description)
 
 
+@app.route("/payee_delete/<payee_id>", methods=["POST", "GET"])
+@login_required
+def payee_delete(payee_id):
+    """Delete payee"""
+    with sql.connect("sqlite.db") as con:
+        cur = con.cursor()
+        cur.execute("SELECT * FROM transactions WHERE payee_id = ?", 
+                    (payee_id,))
+        transaction_exist = cur.fetchone()
+    con.close()
+    if request.method == "POST":
+        if not request.form.get("payee") and transaction_exist:
+            flash("""Select the payee to reassign transactions 
+            from the payee you want to delete.""", "warning")
+            return redirect(f"/payee_delete/{payee_id}")
+        with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
+            cur = con.cursor()
+            if transaction_exist:
+                new_payee = request.form.get("payee")
+                cur.execute("""SELECT payee_id FROM payee 
+                            WHERE payee_name = ? AND user_id = ?""", 
+                            (new_payee, session["user_id"]))
+                new_payee_id = cur.fetchone()[0]
+                cur.execute("""UPDATE transactions SET payee_id = ? 
+                            WHERE user_id = ? AND payee_id = ?""",
+                            (new_payee_id, session["user_id"], 
+                            payee_id))
+            cur.execute("""DELETE FROM payee 
+                        WHERE payee_id = ? AND user_id = ?""", 
+                        (payee_id, session["user_id"]))
+            con.commit()
+        con.close
+        flash("Category deleted", "success")
+        return redirect("/payees")
+    else:
+        with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
+            cur = con.cursor()
+            cur.execute("SELECT * FROM payee WHERE payee_id = ?", 
+                        (payee_id,))
+            payee_db = cur.fetchall()[0]
+            user_id = payee_db["user_id"]
+            if user_id != session["user_id"]:
+                flash("Error", "danger")
+                return redirect("/")
+            payee_name = payee_db["payee_name"]
+            payee_list_dict = payee_list_from_db(session["user_id"], 
+                                                       cur)
+            if transaction_exist and len(payee_list_dict) < 2:
+                flash("""You must first create a new payee where 
+                      all transactions from the payee you want 
+                      to delete will be reassigned""", "warning")
+                return redirect(f"/payee_edit/{payee_id}")
+        con.close()
+        return render_template("payee_delete.html", 
+                               payee_id=payee_id, 
+                               payee_name=payee_name, 
+                               payee_list_dict=payee_list_dict)  
+
+
 @app.route("/categories")
 @login_required
 def categories():
