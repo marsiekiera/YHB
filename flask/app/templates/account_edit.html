@@ -6,7 +6,7 @@
 
 {% block main %}
 <h3 class="text-success text-center">Edit account: <span class="font-weight-bolder">{{ account_name }}</span></h3>
-<form action="/edit_account/{{ account_name }}" method="POST">
+<form action="/account_edit/{{ account_id }}" method="POST">
     <div class="form-row">
         <div class="form-group col">
             <input class="form-control" autocomplete="off" placeholder="Account name" name="account_name" type="text" value="{{ account_name }}">
@@ -31,9 +31,9 @@
         </div>
     </div>
 </form>
-<form action="/account/{{ account_name }}">
-    <div class="form-row">
-        <button class="btn btn-danger" type="submit">Cancel</button>
+<form action="/account/{{ account_id }}">
+    <div class="form-row mt-2">
+        <button class="btn btn-warning" type="submit">Cancel</button>
     </div>
 </form>
 {% endblock %}
