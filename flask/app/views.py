@@ -243,9 +243,9 @@ def add_account():
         return render_template("account_add.html")
 
 
-@app.route("/edit_account/<account_name>", methods=["POST", "GET"])
+@app.route("/account_edit/<account_id>", methods=["POST", "GET"])
 @login_required
-def edit_account(account_name):
+def account_edit(account_id):
     """Edit details of account"""
     if request.method == "POST":
         new_account_name = request.form.get("account_name")
@@ -257,42 +257,44 @@ def edit_account(account_name):
                         starting_balance = ?, account_hide = ?
                         WHERE account_id = ?""", 
                         (new_account_name, new_starting_balance, account_hide,
-                        session['account_id']))
+                        account_id))
             con.commit()
         con.close
         session['account_name'] = new_account_name
         flash("Changes saved", "success")
-        return redirect(f"/account/{ session['account_name'] }")
+        return redirect(f"/account/{ account_id }")
     else:
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
             cur.execute("""SELECT * FROM account WHERE account_id = ?""", 
-                        (session["account_id"],))
+                        (account_id,))
             account_db = cur.fetchall()[0]
             starting_balance = account_db["starting_balance"]
             account_hide = int(account_db["account_hide"])
+            account_name = account_db["account_name"]
         con.close()
-        return render_template("account_edit.html", account_name=account_name,
-        starting_balance=starting_balance, account_hide=account_hide)
+        return render_template(
+            "account_edit.html", account_name=account_name, 
+            starting_balance=starting_balance, account_hide=account_hide, 
+            account_id=account_id)
 
 
-@app.route("/account/<account_name>")
+@app.route("/account/<account_id>")
 @login_required
-def account(account_name):
+def account(account_id):
     """List of all transactions in the account"""
     user_id = session["user_id"]
-    session["account_name"] = account_name
+    session["account_id"] = account_id
     today = datetime.now().strftime('%Y-%m-%d')
-
     with sql.connect("sqlite.db") as con:
         con.row_factory = sql.Row
         cur = con.cursor()
         # create session account id
         cur.execute("""SELECT * FROM account WHERE user_id = ? 
-            AND account_name = ?""", (user_id, account_name))
+            AND account_id = ?""", (user_id, account_id))
         account_db = cur.fetchall()[0]
-        session["account_id"] = account_db["account_id"]
+        account_name = account_db["account_name"]
         starting_balance = account_db["starting_balance"]
         # user's payee list of dict using payee_list function
         payee_list_dict = payee_list_from_db(user_id, cur)
@@ -315,8 +317,9 @@ def account(account_name):
         total = round(float(total), 2)
     con.close()
 
-    return render_template("account.html", account_name=account_name, 
-        today=today, payee_list_dict=payee_list_dict, total=total,
+    return render_template(
+        "account.html", account_name=account_name, account_id=account_id, 
+        today=today, payee_list_dict=payee_list_dict, total=total, 
         category_list_dict=category_list_dict, 
         trans_list_dict=trans_list_dict)
 
