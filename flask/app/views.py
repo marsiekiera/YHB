@@ -324,6 +324,68 @@ def account(account_id):
         trans_list_dict=trans_list_dict)
 
 
+@app.route("/account_delete/<account_id>", methods=["POST", "GET"])
+@login_required
+def account_delete(account_id):
+    """Delete account"""
+    with sql.connect("sqlite.db") as con:
+        cur = con.cursor()
+        cur.execute("SELECT * FROM transactions WHERE account_id = ?", 
+                    (account_id,))
+        transaction_exist = cur.fetchone()
+    con.close()
+    if request.method == "POST":
+        if not request.form.get("new_account_name") and transaction_exist:
+            flash("""Select the account to reassign transactions 
+            from the account you want to delete.""", "warning")
+            return redirect(f"/account_delete/{account_id}")
+        with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
+            cur = con.cursor()
+            if transaction_exist:
+                new_account_name = request.form.get("new_account_name")
+                print(f"new account name: {new_account_name}")
+                cur.execute("""SELECT account_id FROM account 
+                            WHERE account_name = ? AND user_id = ?""", 
+                            (new_account_name, session["user_id"]))
+                new_account_id = cur.fetchone()[0]
+                print(f"new account name: {new_account_id}")
+                cur.execute("""UPDATE transactions SET account_id = ? 
+                            WHERE user_id = ? AND account_id = ?""",
+                            (new_account_id, session["user_id"], 
+                            account_id))
+            cur.execute("""DELETE FROM account 
+                        WHERE account_id = ? AND user_id = ?""", 
+                        (account_id, session["user_id"]))
+            con.commit()
+        con.close
+        flash("Category deleted", "success")
+        return redirect("/accounts")
+    else:
+        with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
+            cur = con.cursor()
+            cur.execute("SELECT * FROM account WHERE account_id = ?", 
+                        (account_id,))
+            account_db = cur.fetchall()[0]
+            user_id = account_db["user_id"]
+            if user_id != session["user_id"]:
+                flash("Error", "danger")
+                return redirect("/")
+            account_name = account_db["account_name"]
+            account_list_dict = account_list_from_db(session["user_id"], cur)
+            if transaction_exist and len(account_list_dict) < 2:
+                flash("""You must first create a new account where 
+                      all transactions from the account you want 
+                      to delete will be reassigned""", "warning")
+                return redirect(f"/account_edit/{account_id}")
+        con.close()
+        return render_template("account_delete.html", 
+                               account_id=account_id, 
+                               account_name=account_name, 
+                               account_list_dict=account_list_dict)
+
+
 @app.route("/add_transaction", methods=["POST"])
 @login_required
 def add_transaction():
