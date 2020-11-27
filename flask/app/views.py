@@ -197,7 +197,37 @@ def accounts():
 @app.route("/transfer", methods=["POST"])
 @login_required
 def transfer():
-    # TO DO 
+    """Transfer money between accounts"""
+    if not request.form.get("date"):
+        flash("Please select date", "warning")
+        return redirect("/accounts")
+    if (not request.form.get("account_id") 
+        or not request.form.get("transfer_account_id")):
+        flash("Please select accounts", "warning")
+        return redirect("/accounts")
+    if (request.form.get("account_id") == 
+        request.form.get("transfer_account_id")):
+        flash("You can't transfer money to the same account", "warning")
+        return redirect("/accounts")
+    if not request.form.get("amount"):
+        flash("Please eneter amount", "warning")
+        return redirect("/accounts")
+    amount_form = request.form.get("amount")
+    if not only_digit(amount_form):
+        flash("Amount incorrect", "warning")
+        return redirect("/accounts")
+    amount = amount_uni(amount_form)
+    with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        cur.execute("""INSERT INTO transactions 
+                    (date, transfer_account_id, amount, user_id, account_id) 
+                    VALUES (?, ?, ?, ?, ?)""", (request.form.get("date"), 
+                    request.form.get("transfer_account_id"), amount, 
+                    session["user_id"], request.form.get("account_id")))
+        con.commit()
+    con.close()
+    flash("Transfer successfully", "success")
     return redirect("/accounts")
 
 
