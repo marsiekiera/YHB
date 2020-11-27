@@ -63,36 +63,34 @@
                 <label for="date">Date</label>
             </div>
             <div class="form-group col">
-                <select name="origin_account" autofocus type="text" class="form-control">
+                <select name="account_id" autofocus type="text" class="form-control">
                     <option value="" disabled selected>From</option>
                     {% for account in user_accounts_list %}
-                        <option value="{{ account['account_name'] }}">
+                        <option value="{{ account['account_id'] }}">
                             {{ account['account_name'] }}
                         </option>
                     {% endfor %}
                 </select>
-                <label for="origin_account">From</label>
+                <label for="account_id">From</label>
             </div>
             <div class="form-group col">
-                <select name="destination_account" autofocus type="text" class="form-control">
+                <select name="transfer_account_id" autofocus type="text" class="form-control">
                     <option value="" disabled selected>To</option>
                     {% for account in user_accounts_list %}
-                        <option value="{{ account['account_name'] }}">
+                        <option value="{{ account['account_id'] }}">
                             {{ account['account_name'] }}
                         </option>
                     {% endfor %}
                 </select>
-                <label for="destination_account">To</label>
+                <label for="transfer_account_id">To</label>
             </div>
             <div class="form-group col">
                 <input autocomplete="off" placeholder="0,00 or 0.00" name="amount" type="text" class="form-control">
                 <label for="amount">Amount</label>
             </div>
             <div class="col">
-                <button type="submit" class="btn btn-success">Transfer cash</button>
+                <button type="submit" class="btn btn-success">Transfer</button>
             </div>
         </div>
     </form>
-
-
 {% endblock %}
