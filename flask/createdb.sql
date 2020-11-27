@@ -12,6 +12,6 @@ CREATE TABLE payee (payee_id INTEGER PRIMARY KEY,
 payee_name TEXT NOT NULL, user_id INTEGER NOT NULL, description TEXT);
 
 CREATE TABLE transactions (transaction_id INTEGER PRIMARY KEY, 
-date TEXT NOT NULL, payee_id INTEGER NOT NULL, 
-category_id INTEGER NOT NULL, amount REAL NOT NULL, 
+date TEXT NOT NULL, payee_id INTEGER, transfer_account_id INTEGER, 
+category_id INTEGER, amount REAL NOT NULL, 
 user_id INTEGER NOT NULL, account_id INTEGER NOT NULL);
