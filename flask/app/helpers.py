@@ -70,13 +70,13 @@ def category_list_from_db(user_id, cur):
     return category_list_dict
 
 
-def transaction_list_from_db(
-    user_id, cur, payee_list_dict, category_list_dict):
+def transaction_list_from_db(user_id, account_id, cur, payee_list_dict, 
+                             category_list_dict, account_list_dict):
     """Create user's transactions list of dict"""
     trans_list_dict = []
     cur.execute(
-        """SELECT * FROM transactions WHERE user_id = ? AND account_id = ? 
-        ORDER BY date""", (user_id, session["account_id"]))
+        """SELECT * FROM transactions WHERE user_id = ? AND (account_id = ? OR transf_to_account_id = ?) 
+        ORDER BY date""", (user_id, account_id, account_id))
     trans_db = cur.fetchall()
     if not trans_db:
         return False
@@ -85,18 +85,33 @@ def transaction_list_from_db(
         tran_dict = {}
         tran_dict["transaction_id"] = tran["transaction_id"]
         tran_dict["date"] = tran["date"]
-        tran_dict["payee_id"] = tran["payee_id"]
-        for pay in payee_list_dict:
-            if pay["payee_id"] == tran["payee_id"]:
-                tran_dict["payee_name"] = pay["payee_name"]
-        tran_dict["category_id"] = tran["category_id"]
-        for cat in category_list_dict:
-            if cat["category_id"] == tran["category_id"]:
-                tran_dict["category_name"] = cat["category_name"]
-        tran_dict["amount"] = tran["amount"]
+        account_id_db = tran["account_id"]
+        transf_to_account_id = tran["transf_to_account_id"]
+        if transf_to_account_id == int(account_id):
+            for account in account_list_dict:
+                if account["account_id"] == account_id_db:
+                    account_name = account["account_name"]
+            tran_dict["payee_name"] = f"Transfer from: {account_name}"
+            tran_dict["amount"] = tran["amount"]
+        elif transf_to_account_id:
+            for account in account_list_dict:
+                if account["account_id"] == transf_to_account_id:
+                    account_name = account["account_name"]
+            tran_dict["payee_name"] = f"Transfer to: {account_name}"
+            tran_dict["amount"] = tran["amount"] * -1
+        else:
+            tran_dict["payee_id"] = tran["payee_id"]
+            for pay in payee_list_dict:
+                if pay["payee_id"] == tran["payee_id"]:
+                    tran_dict["payee_name"] = pay["payee_name"]
+            tran_dict["category_id"] = tran["category_id"]
+            for cat in category_list_dict:
+                if cat["category_id"] == tran["category_id"]:
+                    tran_dict["category_name"] = cat["category_name"]
+            tran_dict["amount"] = tran["amount"]
+        tran_dict["account_id"] = tran["account_id"]
         total = round(float(total + tran["amount"]), 2)
         tran_dict["user_id"] = tran["user_id"]
-        tran_dict["account_id"] = tran["account_id"]
         trans_list_dict.append(tran_dict)
     return [trans_list_dict, total]
 
