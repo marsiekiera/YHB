@@ -202,11 +202,11 @@ def transfer():
         flash("Please select date", "warning")
         return redirect("/accounts")
     if (not request.form.get("account_id") 
-        or not request.form.get("transfer_account_id")):
+        or not request.form.get("transf_to_account_id")):
         flash("Please select accounts", "warning")
         return redirect("/accounts")
     if (request.form.get("account_id") == 
-        request.form.get("transfer_account_id")):
+        request.form.get("transf_to_account_id")):
         flash("You can't transfer money to the same account", "warning")
         return redirect("/accounts")
     if not request.form.get("amount"):
@@ -221,9 +221,9 @@ def transfer():
         con.row_factory = sql.Row
         cur = con.cursor()
         cur.execute("""INSERT INTO transactions 
-                    (date, transfer_account_id, amount, user_id, account_id) 
+                    (date, transf_to_account_id, amount, user_id, account_id) 
                     VALUES (?, ?, ?, ?, ?)""", (request.form.get("date"), 
-                    request.form.get("transfer_account_id"), amount, 
+                    request.form.get("transf_to_account_id"), amount, 
                     session["user_id"], request.form.get("account_id")))
         con.commit()
     con.close()
@@ -334,10 +334,14 @@ def account(account_id):
         category_list_dict = category_list_from_db(user_id, cur)
         if not category_list_dict:
             category_list_dict = []
+        # user's accounts list of dictionary
+        account_list_dict = account_list_from_db(user_id, cur)
         # user's transactions list of dict using transaction_list function
-        trans_list_dict_db = transaction_list_from_db(user_id, cur, 
-                                                      payee_list_dict, 
-                                                      category_list_dict)
+        trans_list_dict_db = transaction_list_from_db(user_id, account_id, 
+                                                      cur, payee_list_dict, 
+                                                      category_list_dict, 
+                                                      account_list_dict)
+        print(trans_list_dict_db)
         if not trans_list_dict_db:
             trans_list_dict = []
             total = starting_balance
@@ -427,15 +431,15 @@ def add_transaction():
     trans_type = int(request.form.get("transaction_type"))
     if not only_digit(amount_form) or not amount_form:
         flash("Amount incorrect", "danger")
-        return redirect(f"/account/{ session['account_name'] }")
+        return redirect(f"/account/{ session['account_id'] }")
     amount = amount_uni(amount_form) * trans_type
     if (request.form.get("payee") == None 
         or request.form.get("category") == None):
         flash("Please choose payee and category", "danger")
-        return redirect(f"/account/{ session['account_name'] }")
+        return redirect(f"/account/{ session['account_id'] }")
     if not request.form.get("date"):
         flash("Please enter correct date", "danger")
-        return redirect(f"/account/{ session['account_name'] }")
+        return redirect(f"/account/{ session['account_id'] }")
     # Connect with database
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
@@ -455,7 +459,7 @@ def add_transaction():
         con.commit()      
     con.close()
     flash("Transaction successfully added", "success")
-    return redirect(f"/account/{ session['account_name'] }")
+    return redirect(f"/account/{ session['account_id'] }")
 
 
 @app.route("/transaction/<transaction_id>", methods=["POST", "GET"])
