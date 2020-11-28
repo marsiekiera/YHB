@@ -181,7 +181,16 @@ def accounts():
                         (user_id, account_dict["account_id"]))
             trans_db = cur.fetchall()
             for tran in trans_db:
-                balance = round(float(balance + tran["amount"]), 2)
+                if tran["transf_to_account_id"]:
+                    balance = round(float(balance - tran["amount"]), 2)
+                else:
+                    balance = round(float(balance + tran["amount"]), 2)
+            cur.execute("""SELECT amount FROM transactions 
+                        WHERE user_id = ? AND transf_to_account_id = ?""", 
+                        (user_id, account_dict["account_id"]))
+            amounts_db = cur.fetchone()
+            for amount in amounts_db:
+                balance = round(float(balance + amount), 2)
             account_dict["balance"] = balance # current balance
             total_accounts += balance
             total_accounts = round(float(total_accounts), 2)
@@ -341,7 +350,6 @@ def account(account_id):
                                                       cur, payee_list_dict, 
                                                       category_list_dict, 
                                                       account_list_dict)
-        print(trans_list_dict_db)
         if not trans_list_dict_db:
             trans_list_dict = []
             total = starting_balance
@@ -378,12 +386,10 @@ def account_delete(account_id):
             cur = con.cursor()
             if transaction_exist:
                 new_account_name = request.form.get("new_account_name")
-                print(f"new account name: {new_account_name}")
                 cur.execute("""SELECT account_id FROM account 
                             WHERE account_name = ? AND user_id = ?""", 
                             (new_account_name, session["user_id"]))
                 new_account_id = cur.fetchone()[0]
-                print(f"new account name: {new_account_id}")
                 cur.execute("""UPDATE transactions SET account_id = ? 
                             WHERE user_id = ? AND account_id = ?""",
                             (new_account_id, session["user_id"], 
