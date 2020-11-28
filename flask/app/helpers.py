@@ -110,7 +110,7 @@ def transaction_list_from_db(user_id, account_id, cur, payee_list_dict,
                     tran_dict["category_name"] = cat["category_name"]
             tran_dict["amount"] = tran["amount"]
         tran_dict["account_id"] = tran["account_id"]
-        total = round(float(total + tran["amount"]), 2)
+        total = round(float(total + tran_dict["amount"]), 2)
         tran_dict["user_id"] = tran["user_id"]
         trans_list_dict.append(tran_dict)
     return [trans_list_dict, total]
