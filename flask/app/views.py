@@ -189,8 +189,9 @@ def accounts():
                         WHERE user_id = ? AND transf_to_account_id = ?""", 
                         (user_id, account_dict["account_id"]))
             amounts_db = cur.fetchone()
-            for amount in amounts_db:
-                balance = round(float(balance + amount), 2)
+            if amounts_db:
+                for amount in amounts_db:
+                    balance = round(float(balance + amount), 2)
             account_dict["balance"] = balance # current balance
             total_accounts += balance
             total_accounts = round(float(total_accounts), 2)
