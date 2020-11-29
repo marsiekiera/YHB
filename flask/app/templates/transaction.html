@@ -10,13 +10,13 @@
 <form action="/transaction/{{ transaction_id }}" method="POST">
     <div class="form-row">
         <div class="form-group col">
-            <input class="form-control" name="date" type="date" value="{{ date }}" min="2000-01-01">
+            <input class="form-control" name="date" type="date" value="{{ transaction_dict['date'] }}" min="2000-01-01">
             <label for="date">Date</label>
         </div>
         <div class="form-group col">
             <select class="form-control" name="account" type="text">
                 {% for acc in account_list_dict %}
-                    {% if acc['account_name'] == account_name %}
+                    {% if acc['account_name'] == transaction_dict['account_name'] %}
                         <option value="{{ acc['account_name'] }}" selected>
                             {{ acc['account_name'] }}
                         </option>
@@ -27,11 +27,12 @@
                     {% endif %}
                 {% endfor %}
             </select>
+    {% if transaction_dict["tran_type"] %}
             <label for="account">Account</label>
         </div>
         <div class="form-group col">
             <select class="form-control" name="transaction_type" type="number">
-                {% if tran_type == "Withdrawal" %}
+                {% if transaction_dict["tran_type"] == "Withdrawal" %}
                 <option value="-1" selected>Withdrawal</option>
                 <option value="1">Deposit</option>
                 {% else %}
@@ -46,7 +47,7 @@
         <div class="form-group col">
             <select class="form-control" name="payee" autofocus type="text">
                 {% for dict in payee_list_dict %}
-                    {% if dict['payee_name'] == payee_name %}
+                    {% if dict['payee_name'] == transaction_dict["payee_name"] %}
                         <option value="{{ dict['payee_name'] }}" selected>
                             {{ dict['payee_name'] }}
                         </option>
@@ -62,7 +63,7 @@
         <div class="form-group col">
             <select class="form-control" name="category" type="text">
                 {% for dict in category_list_dict %}
-                    {% if dict['category_name'] == category_name %}
+                    {% if dict['category_name'] == transaction_dict["category_name"] %}
                         <option value="{{ dict['category_name'] }}" selected>
                             {{ dict['category_name'] }}
                         </option>
@@ -75,9 +76,29 @@
             </select>
             <label for="category">Category</label>
         </div>
+    {% else %}
+            <label for="account">Transfer from account</label>
+        </div>
+        <div class="form-group col">
+            <select class="form-control" name="transf_to_account_name" type="text">
+                {% for acc in account_list_dict %}
+                    {% if acc['account_name'] == transaction_dict['transf_to_account_name'] %}
+                        <option value="{{ acc['account_id'] }}" selected>
+                            {{ acc['account_name'] }}
+                        </option>
+                    {% else %}
+                        <option value="{{ acc['account_name'] }}">
+                            {{ acc['account_name'] }}
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <label for="transf_to_account_name">Transfer to account</label>
+        </div>
+    {% endif %}
         <div class="form-group col">
             <input class="form-control" autocomplete="off" placeholder="0,00 or 0.00" 
-                name="amount" type="text" value="{{ amount }}">
+                name="amount" type="text" value="{{ transaction_dict['amount'] }}">
             <label for="amount">Amount</label>
         </div>
         <div class="col">
@@ -86,7 +107,7 @@
     </div>
 </form>
 
-<form action="/account/{{ account_name }}">
+<form action="/account/{{ transaction_dict['account_id'] }}">
     <div class="form-row mb-2">
         <button class="btn btn-warning" type="submit">Cancel</button>
     </div>
