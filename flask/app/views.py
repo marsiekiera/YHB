@@ -483,31 +483,52 @@ def transaction(transaction_id):
         # user's accounts list of dict using account_list function
         account_list_dict = account_list_from_db(session["user_id"], cur)
     con.close()
-
     if request.method == "POST":
-        for pay in payee_list_dict:
-            if pay["payee_name"] == request.form.get("payee"):
-                payee_id = pay["payee_id"]
-        for cat in category_list_dict:
-            if cat["category_name"] == request.form.get("category"):
-                category_id = cat["category_id"]
+        if not request.form.get("amount"):
+            flash("Please enter the amount", "warning")
+            return redirect(f"/transaction/{ transaction_id }")
+        if not request.form.get("date"):
+            flash("Please enter the date", "warning")
+            return redirect(f"/transaction/{ transaction_id }")
         for acc in account_list_dict:
             if acc["account_name"] == request.form.get("account"):
                 account_id = acc["account_id"]
-        amount = (amount_uni(request.form.get("amount")) 
-                    * int(request.form.get("transaction_type")))
-        with sql.connect("sqlite.db") as con:
-            cur =  con.cursor()
-            cur.execute("""
-                UPDATE transactions 
-                SET date = ?, payee_id = ?, category_id = ?, amount = ?, 
-                account_id = ?
-                WHERE transaction_id = ?
-                """, (request.form.get("date"), payee_id, category_id, amount, 
-                account_id, transaction_id))
-            con.commit()
+        if request.form.get("payee"):
+            for pay in payee_list_dict:
+                if pay["payee_name"] == request.form.get("payee"):
+                    payee_id = pay["payee_id"]
+            for cat in category_list_dict:
+                if cat["category_name"] == request.form.get("category"):
+                    category_id = cat["category_id"]
+            amount = (amount_uni(request.form.get("amount")) 
+                        * int(request.form.get("transaction_type")))
+            with sql.connect("sqlite.db") as con:
+                cur =  con.cursor()
+                cur.execute(
+                    """UPDATE transactions 
+                    SET date = ?, payee_id = ?, category_id = ?, amount = ?, 
+                    account_id = ?
+                    WHERE transaction_id = ?""",
+                    (request.form.get("date"), payee_id, category_id, amount, 
+                    account_id, transaction_id))
+                con.commit()
+        else:
+            amount = (amount_uni(request.form.get("amount")))
+            for acc in account_list_dict:
+                if acc["account_name"] == request.form.get(
+                                            "transf_to_account_name"):
+                    transf_to_account_id = acc["account_id"]
+            with sql.connect("sqlite.db") as con:
+                cur = con.cursor()
+                cur.execute(
+                    """UPDATE transactions 
+                    SET date = ?, transf_to_account_id = ?, amount = ?, 
+                    account_id = ? WHERE transaction_id = ?""", 
+                    (request.form.get("date"), transf_to_account_id, amount,
+                    account_id, transaction_id))
+                con.commit()
         con.close()
-        flash("Transaction successfully edited", "success")
+        flash("Transfer successfully edited", "success")
         return redirect(f"/transaction/{ transaction_id }")
     else:
         transaction_id = int(transaction_id)
