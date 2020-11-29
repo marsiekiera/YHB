@@ -523,35 +523,48 @@ def transaction(transaction_id):
                 or session["user_id"] != transaction_db["user_id"]):
                 flash("Database error. Contact with admin", "danger")
                 return redirect("/")
-            date = transaction_db["date"]
-            payee_id = transaction_db["payee_id"]
-            category_id = transaction_db["category_id"]
-            amount = transaction_db["amount"]
-            account_id = transaction_db["account_id"]
-            if amount > 0:
-                tran_type = "Deposit"
+            # Create transaction dictionary
+            transaction_dict = {}
+            transaction_dict["date"] = transaction_db["date"]
+            transaction_dict["amount"] = transaction_db["amount"]
+            transaction_dict["account_id"] = transaction_db["account_id"]
+            cur.execute("""SELECT account_name FROM account 
+                        WHERE account_id = ?""",
+                        (transaction_dict["account_id"],))
+            transaction_dict["account_name"] = cur.fetchone()[0]
+            # If transactions is not transfer
+            if transaction_db["payee_id"]:
+                transaction_dict["payee_id"] = transaction_db["payee_id"]
+                transaction_dict["category_id"] = (
+                    transaction_db["category_id"])
+                if transaction_dict["amount"] > 0:
+                    transaction_dict["tran_type"] = "Deposit"
+                else:
+                    transaction_dict["tran_type"] = "Withdrawal"
+                    transaction_dict["amount"] *= -1
+                cur.execute("""SELECT payee_name 
+                            FROM payee WHERE payee_id = ?""",
+                            (transaction_dict["payee_id"],))
+                transaction_dict["payee_name"] = cur.fetchone()[0]
+                cur.execute("""SELECT category_name FROM category 
+                            WHERE category_id = ?""",
+                            (transaction_dict["category_id"],))
+                transaction_dict["category_name"] = cur.fetchone()[0]
+            # If transaction is transfer
             else:
-                tran_type = "Withdrawal"
-                amount *= -1
-            cur.execute("SELECT payee_name FROM payee WHERE payee_id = ?",
-                        (payee_id,))
-            payee_name = cur.fetchone()[0]
-            cur.execute(
-                "SELECT category_name FROM category WHERE category_id = ?",
-                (category_id,))
-            category_name = cur.fetchone()[0]
-            cur.execute(
-                "SELECT account_name FROM account WHERE account_id = ?",
-                (account_id,))
-            account_name = cur.fetchone()[0]
+                transaction_dict["transf_to_account_id"] = (
+                    transaction_db["transf_to_account_id"])
+                transaction_dict["amount"] = transaction_db["amount"]
+                cur.execute("""SELECT account_name FROM account 
+                            WHERE account_id = ?""",
+                            (transaction_dict["transf_to_account_id"],))
+                transaction_dict["transf_to_account_name"] = cur.fetchone()[0]
         con.close()
         return render_template(
-            "transaction.html", date=date, tran_type=tran_type, amount=amount,
-            transaction_id=transaction_id, 
-            payee_list_dict=payee_list_dict, payee_name=payee_name, 
+            "transaction.html", transaction_dict=transaction_dict, 
+            transaction_id=transaction_id, payee_list_dict=payee_list_dict, 
             category_list_dict=category_list_dict, 
-            category_name=category_name, account_list_dict=account_list_dict, 
-            account_name=account_name)
+            account_list_dict=account_list_dict)
 
 
 @app.route("/delete_transaction/<transaction_id>")
