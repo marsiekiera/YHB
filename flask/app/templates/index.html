@@ -5,5 +5,29 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Your Home Budget</h1>
+<canvas id="myChart"></canvas>
+<script>
+    var category_list = {{ category_list|tojson }}
+    var balance_list = {{ balance_list|tojson }}
+    var ctx = document.getElementById('myChart');
+    var myPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: category_list,
+            datasets: [{
+                data: balance_list,
+                backgroundColor: [
+                    'rgba(255, 99, 132)',
+                    'rgba(54, 162, 235)',
+                    'rgba(255, 206, 86)',
+                    'rgba(75, 192, 192)',
+                    'rgba(153, 102, 255)',
+                    'rgba(255, 159, 64)'
+                ],
+            }]
+        },
+        options: {
+        }
+    });
+</script>
 {% endblock %}
