@@ -50,7 +50,33 @@ def index():
     st_name = "Home"
     # Use os.getenv("key") to get environment variables
     app_name = os.getenv("YHB")
-    return render_template("index.html", st_name=st_name)
+
+    with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        category_list_dict = category_list_from_db(session["user_id"], cur)
+        for category in category_list_dict:
+            balance = 0
+            cur.execute(
+                """SELECT amount FROM transactions 
+                WHERE user_id = ? AND category_id = ?""", 
+                (session["user_id"], category["category_id"]))
+            amounts_db = cur.fetchall()
+            for amount in amounts_db:
+                if amount[0] < 0:
+                    balance += amount[0]
+            category["balance"] = balance
+    con.close()
+
+    category_list = []
+    for category in category_list_dict:
+        category_list.append(category["category_name"])
+    balance_list = []
+    for balance in category_list_dict:
+        balance_list.append(balance["balance"])
+
+    return render_template("index.html", st_name=st_name, 
+                           category_list_dict=category_list_dict, category_list=category_list, balance_list=balance_list)
 
 
 @app.route("/login", methods=["GET", "POST"])
