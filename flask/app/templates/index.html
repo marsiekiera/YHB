@@ -5,6 +5,20 @@
 {% endblock %}
 
 {% block main %}
+<form action="/" method="POST">
+    <div class="form-row">
+        <div class="form-group col">
+            <select name="period" autofocus type="text" class="form-control">
+                <option value="current_month" selected>Current month</option>
+                <option value="previous_month">Previous month</option>
+            </select>
+            <label for="period">Period</label>
+        </div>
+        <div class="col">
+            <button class="btn btn-success" type="submit">Submit</button>
+        </div>
+    </div>
+</form>
 <canvas id="myChart"></canvas>
 <script>
     var category_list = {{ category_list|tojson }}
