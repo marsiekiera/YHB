@@ -43,40 +43,59 @@ def inject_dict_for_all_templates():
 
 # All Flask modules
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
     """Homepage"""
     st_name = "Home"
     # Use os.getenv("key") to get environment variables
     app_name = os.getenv("YHB")
-
-    with sql.connect("sqlite.db") as con:
-        con.row_factory = sql.Row
-        cur = con.cursor()
-        category_list_dict = category_list_from_db(session["user_id"], cur)
+    if request.method == "POST":
+        user_id = session["user_id"]
+        if request.form.get("period") == "current_month":
+            today_string = datetime.today().strftime('%Y-%m')
+            month_start = today_string + "-01"
+            month_end = today_string + "-31"
+        elif request.form.get("period") == "previous_month":
+            previous_month = str(datetime.now().month - 1)
+            current_year = str(datetime.now().year)
+            month_start = current_year + "-" + previous_month + "-01"
+            month_end = current_year + "-" + previous_month + "-31"
+        with sql.connect("sqlite.db") as con:
+            con.row_factory = sql.Row
+            cur = con.cursor()
+            category_list_dict = category_list_from_db(user_id, cur)
+            if not category_list_dict:
+                flash("You need to add category first", "warning")
+                return redirect("/")
+            for category in category_list_dict:
+                balance = 0
+                cur.execute(
+                    """SELECT date, amount FROM transactions 
+                    WHERE user_id = ? AND category_id = ?""", 
+                    (user_id, category["category_id"]))
+                transactions_db = cur.fetchall()
+                for transaction in transactions_db:
+                    if (transaction["date"] >= month_start 
+                        and transaction["date"] <= month_end 
+                        and transaction["amount"] < 0):
+                        balance += abs(transaction["amount"])
+                category["balance"] = balance
+        con.close()
         for category in category_list_dict:
-            balance = 0
-            cur.execute(
-                """SELECT amount FROM transactions 
-                WHERE user_id = ? AND category_id = ?""", 
-                (session["user_id"], category["category_id"]))
-            amounts_db = cur.fetchall()
-            for amount in amounts_db:
-                if amount[0] < 0:
-                    balance += amount[0]
-            category["balance"] = balance
-    con.close()
-
-    category_list = []
-    for category in category_list_dict:
-        category_list.append(category["category_name"])
-    balance_list = []
-    for balance in category_list_dict:
-        balance_list.append(balance["balance"])
-
-    return render_template("index.html", st_name=st_name, 
-                           category_list_dict=category_list_dict, category_list=category_list, balance_list=balance_list)
+            if category["balance"] <= 0:
+                category_list_dict.remove(category)
+        category_list = []
+        for category in category_list_dict:
+            category_list.append(category["category_name"])
+        balance_list = []
+        for balance in category_list_dict:
+            balance_list.append(balance["balance"])
+        return render_template("index.html", st_name=st_name,
+                               category_list=category_list, 
+                               balance_list=balance_list)
+    else:
+        return render_template("index.html", st_name=st_name)
 
 
 @app.route("/login", methods=["GET", "POST"])
