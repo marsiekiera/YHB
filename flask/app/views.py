@@ -64,11 +64,11 @@ def index():
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
-            category_list_dict = category_list_from_db(user_id, cur)
-            if not category_list_dict:
+            category_list_dict_plain = category_list_from_db(user_id, cur)
+            if not category_list_dict_plain:
                 flash("You need to add category first", "warning")
                 return redirect("/")
-            for category in category_list_dict:
+            for category in category_list_dict_plain:
                 balance = 0
                 cur.execute(
                     """SELECT date, amount FROM transactions 
@@ -82,9 +82,10 @@ def index():
                         balance += abs(transaction["amount"])
                 category["balance"] = balance
         con.close()
-        for category in category_list_dict:
-            if category["balance"] <= 0:
-                category_list_dict.remove(category)
+        category_list_dict = []
+        for cat in category_list_dict_plain:
+            if cat["balance"] > 0:
+                category_list_dict.append(cat)
         category_list = []
         for category in category_list_dict:
             category_list.append(category["category_name"])
