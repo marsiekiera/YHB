@@ -56,11 +56,13 @@ def index():
             today_string = datetime.today().strftime('%Y-%m')
             month_start = today_string + "-01"
             month_end = today_string + "-31"
+            chart_title = "Expenses for the current month"
         elif request.form.get("period") == "previous_month":
             previous_month = str(datetime.now().month - 1)
             current_year = str(datetime.now().year)
             month_start = current_year + "-" + previous_month + "-01"
             month_end = current_year + "-" + previous_month + "-31"
+            chart_title = "Expenses for the previous month"
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
@@ -94,7 +96,8 @@ def index():
             balance_list.append(balance["balance"])
         return render_template("index.html", st_name=st_name,
                                category_list=category_list, 
-                               balance_list=balance_list)
+                               balance_list=balance_list, 
+                               chart_title=chart_title)
     else:
         return render_template("index.html", st_name=st_name)
 
