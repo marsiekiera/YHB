@@ -82,7 +82,7 @@ def index():
                         and transaction["date"] <= month_end 
                         and transaction["amount"] < 0):
                         balance += abs(transaction["amount"])
-                category["balance"] = balance
+                category["balance"] = round(balance, 2)
         con.close()
         category_list_dict = []
         for cat in category_list_dict_plain:
@@ -244,7 +244,7 @@ def accounts():
             account_dict["balance"] = balance # current balance
             total_accounts += balance
             total_accounts = round(float(total_accounts), 2)
-            account_dict["account_hide"] = acc["starting_balance"]
+            account_dict["account_hide"] = acc["account_hide"]
             user_accounts_list.append(account_dict)
     con.close()
 
