@@ -94,10 +94,17 @@ def index():
     balance_list = []
     for balance in category_list_dict:
         balance_list.append(balance["balance"])
+    colors_list = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", 
+                   "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",]
+    if len(category_list_dict) > 10:
+        for i in range(len(category_list_dict)-10):
+            color = "#" + ''.join(
+                [random.choice('0123456789ABCDEF') for j in range(6)])
+            colors_list.append(color)
     return render_template("index.html", st_name=st_name,
                             category_list=category_list, 
                             balance_list=balance_list, 
-                            chart_title=chart_title)
+                            chart_title=chart_title, colors_list=colors_list)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
