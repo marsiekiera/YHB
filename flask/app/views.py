@@ -199,10 +199,14 @@ def logout():
     return redirect("/")
 
 
-@app.route("/accounts")
+@app.route("/accounts", methods=["POST", "GET"])
 @login_required
 def accounts():
     """List of all accounts and balance"""
+    show_hidden_accounts = False
+    if request.method == "POST":
+        if int(request.form.get("show_hidden_account_form")) == 1:
+            show_hidden_accounts = True
     today = datetime.now().strftime('%Y-%m-%d')
     st_name = "Accounts"
     user_id = session["user_id"]
@@ -250,7 +254,8 @@ def accounts():
 
     return render_template(
         "accounts.html", user_accounts_list=user_accounts_list, 
-        total_accounts=total_accounts, st_name=st_name, today=today)
+        total_accounts=total_accounts, st_name=st_name, today=today, 
+        show_hidden_accounts=show_hidden_accounts)
 
 
 @app.route("/transfer", methods=["POST"])
