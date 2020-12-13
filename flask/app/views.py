@@ -5,6 +5,7 @@ from flask import render_template, request, redirect, flash, session
 import sqlite3 as sql
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
+import random
 
 from app.helpers import (check_password, login_required, only_digit, 
     payee_list_from_db, category_list_from_db, transaction_list_from_db,
@@ -50,57 +51,53 @@ def index():
     st_name = "Home"
     # Use os.getenv("key") to get environment variables
     app_name = os.getenv("YHB")
+    user_id = session["user_id"]
+    today_string = datetime.today().strftime('%Y-%m')
+    month_start = today_string + "-01"
+    month_end = today_string + "-31"
+    chart_title = "Expenses for the current month"
     if request.method == "POST":
-        user_id = session["user_id"]
-        if request.form.get("period") == "current_month":
-            today_string = datetime.today().strftime('%Y-%m')
-            month_start = today_string + "-01"
-            month_end = today_string + "-31"
-            chart_title = "Expenses for the current month"
-        elif request.form.get("period") == "previous_month":
+        if request.form.get("period") == "previous_month":
             previous_month = str(datetime.now().month - 1)
             current_year = str(datetime.now().year)
             month_start = current_year + "-" + previous_month + "-01"
             month_end = current_year + "-" + previous_month + "-31"
             chart_title = "Expenses for the previous month"
-        with sql.connect("sqlite.db") as con:
-            con.row_factory = sql.Row
-            cur = con.cursor()
-            category_list_dict_plain = category_list_from_db(user_id, cur)
-            if not category_list_dict_plain:
-                flash("You need to add category first", "warning")
-                return redirect("/")
-            for category in category_list_dict_plain:
-                balance = 0
-                cur.execute(
-                    """SELECT date, amount FROM transactions 
-                    WHERE user_id = ? AND category_id = ?""", 
-                    (user_id, category["category_id"]))
-                transactions_db = cur.fetchall()
-                for transaction in transactions_db:
-                    if (transaction["date"] >= month_start 
-                        and transaction["date"] <= month_end 
-                        and transaction["amount"] < 0):
-                        balance += abs(transaction["amount"])
-                category["balance"] = round(balance, 2)
-        con.close()
-        category_list_dict = []
-        for cat in category_list_dict_plain:
-            if cat["balance"] > 0:
-                category_list_dict.append(cat)
-        category_list = []
-        for category in category_list_dict:
-            category_list.append(category["category_name"])
-        balance_list = []
-        for balance in category_list_dict:
-            balance_list.append(balance["balance"])
-        return render_template("index.html", st_name=st_name,
-                               category_list=category_list, 
-                               balance_list=balance_list, 
-                               chart_title=chart_title)
-    else:
-        return render_template("index.html", st_name=st_name)
-
+    with sql.connect("sqlite.db") as con:
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        category_list_dict_plain = category_list_from_db(user_id, cur)
+        if not category_list_dict_plain:
+            flash("You need to add category first", "warning")
+            return redirect("/")
+        for category in category_list_dict_plain:
+            balance = 0
+            cur.execute(
+                """SELECT date, amount FROM transactions 
+                WHERE user_id = ? AND category_id = ?""", 
+                (user_id, category["category_id"]))
+            transactions_db = cur.fetchall()
+            for transaction in transactions_db:
+                if (transaction["date"] >= month_start 
+                    and transaction["date"] <= month_end 
+                    and transaction["amount"] < 0):
+                    balance += abs(transaction["amount"])
+            category["balance"] = round(balance, 2)
+    con.close()
+    category_list_dict = []
+    for cat in category_list_dict_plain:
+        if cat["balance"] > 0:
+            category_list_dict.append(cat)
+    category_list = []
+    for category in category_list_dict:
+        category_list.append(category["category_name"])
+    balance_list = []
+    for balance in category_list_dict:
+        balance_list.append(balance["balance"])
+    return render_template("index.html", st_name=st_name,
+                            category_list=category_list, 
+                            balance_list=balance_list, 
+                            chart_title=chart_title)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
