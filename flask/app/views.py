@@ -68,8 +68,7 @@ def index():
         cur = con.cursor()
         category_list_dict_plain = category_list_from_db(user_id, cur)
         if not category_list_dict_plain:
-            flash("You need to add category first", "warning")
-            return redirect("/")
+            return redirect("/accounts")
         for category in category_list_dict_plain:
             balance = 0
             cur.execute(
