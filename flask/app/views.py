@@ -56,7 +56,6 @@ def index():
     month_start = today_string + "-01"
     month_end = today_string + "-31"
     chart_title = "Expenses for the current month"
-    
     if request.method == "POST":
         if request.form.get("period") == "previous_month":
             previous_month = str(datetime.now().month - 1)
@@ -70,9 +69,7 @@ def index():
         category_list_dict_plain = category_list_from_db(user_id, cur)
         if not category_list_dict_plain:
             flash("You need to add category first", "warning")
-            
             return redirect("/")
-            print("test")
         for category in category_list_dict_plain:
             balance = 0
             cur.execute(
