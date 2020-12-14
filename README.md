@@ -46,6 +46,15 @@ source env/bin/activate
 pip install -r requirements.txt 
 ```
 ```bash
+cd app/static
+```
+```bash
+npm install chart.js --save
+```
+```bash
+cd -
+```
+```bash
 export FLASK_APP=run.py
 ```
 ```bash
@@ -56,6 +65,5 @@ To quit use keyboard shortcuts CTRL + C
 ### Log-in to app
 
 If you don't want to register, you can use the below login detail:
-
-Login: demo
-Password: 1@Qw
+* Login: demo
+* Password: 1@Qw
