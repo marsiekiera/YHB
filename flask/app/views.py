@@ -56,6 +56,7 @@ def index():
     month_start = today_string + "-01"
     month_end = today_string + "-31"
     chart_title = "Expenses for the current month"
+    
     if request.method == "POST":
         if request.form.get("period") == "previous_month":
             previous_month = str(datetime.now().month - 1)
@@ -69,7 +70,9 @@ def index():
         category_list_dict_plain = category_list_from_db(user_id, cur)
         if not category_list_dict_plain:
             flash("You need to add category first", "warning")
+            
             return redirect("/")
+            print("test")
         for category in category_list_dict_plain:
             balance = 0
             cur.execute(
@@ -351,6 +354,13 @@ def account_edit(account_id):
         account_hide = 1 if request.form.get("account_hide") == "on" else 0
         with sql.connect("sqlite.db") as con:
             cur = con.cursor()
+            cur.execute("""SELECT account_name FROM account 
+                        WHERE account_name = ? AND user_id = ?""", 
+                        (new_account_name, session["user_id"]))
+            account_already_exist = cur.fetchall()
+            if account_already_exist:
+                flash("You already have an account with that name", "warning")
+                return redirect(f"/account/{ account_id }")
             cur.execute("""UPDATE account SET account_name = ?, 
                         starting_balance = ?, account_hide = ?
                         WHERE account_id = ?""", 
