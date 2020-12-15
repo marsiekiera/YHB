@@ -105,6 +105,7 @@ def index():
                             balance_list=balance_list, 
                             chart_title=chart_title, colors_list=colors_list)
 
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
@@ -171,7 +172,9 @@ def register():
             if not request.form.get("password"):
                 flash("Please provide password", "danger")
                 return redirect("/register")
-            if not request.form.get("re_password") or request.form.get("password") != request.form.get("re_password"):
+            if (not request.form.get("re_password")
+                or request.form.get("password") 
+                    != request.form.get("re_password")):
                 flash("Please re-type the same password", "danger")
                 return redirect("/register")
             elif not check_password(request.form.get("password")):
@@ -371,9 +374,13 @@ def account_edit(account_id):
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
-            cur.execute("""SELECT * FROM account WHERE account_id = ?""", 
-                        (account_id,))
-            account_db = cur.fetchall()[0]
+            cur.execute("""SELECT * FROM account WHERE account_id = ? 
+                        AND user_id = ?""", 
+                        (account_id, session["user_id"]))
+            account_db = cur.fetchone()
+            if not account_db:
+                flash("Access denied", "danger")
+                return redirect("/accounts")
             starting_balance = account_db["starting_balance"]
             account_hide = int(account_db["account_hide"])
             account_name = account_db["account_name"]
@@ -397,7 +404,10 @@ def account(account_id):
         # create session account id
         cur.execute("""SELECT * FROM account WHERE user_id = ? 
             AND account_id = ?""", (user_id, account_id))
-        account_db = cur.fetchall()[0]
+        account_db = cur.fetchone()
+        if not account_db:
+            flash("Access denied", "danger")
+            return redirect("/accounts")
         account_name = account_db["account_name"]
         starting_balance = account_db["starting_balance"]
         # user's payee list of dict using payee_list function
@@ -455,6 +465,9 @@ def account_delete(account_id):
                             WHERE account_name = ? AND user_id = ?""", 
                             (new_account_name, session["user_id"]))
                 new_account_id = cur.fetchone()[0]
+                if not new_account_id:
+                    flash("Access denied", "danger")
+                    return redirect("/accounts")
                 cur.execute("""UPDATE transactions SET account_id = ? 
                             WHERE user_id = ? AND account_id = ?""",
                             (new_account_id, session["user_id"], 
@@ -470,13 +483,13 @@ def account_delete(account_id):
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
-            cur.execute("SELECT * FROM account WHERE account_id = ?", 
-                        (account_id,))
-            account_db = cur.fetchall()[0]
-            user_id = account_db["user_id"]
-            if user_id != session["user_id"]:
-                flash("Error", "danger")
-                return redirect("/")
+            cur.execute("""SELECT * FROM account WHERE account_id = ?
+                        AND user_id = ?""", 
+                        (account_id, session["user_id"]))
+            account_db = cur.fetchone()
+            if not account_db:
+                flash("Access denied", "danger")
+                return redirect("/accounts")
             account_name = account_db["account_name"]
             account_list_dict = account_list_from_db(session["user_id"], cur)
             if transaction_exist and len(account_list_dict) < 2:
