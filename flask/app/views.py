@@ -116,7 +116,7 @@ def login():
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
-            user_name = str.lower(request.form.get("user_name"))
+            user_name = request.form.get("user_name")
             if not user_name:
                 flash("Please provide User Name", "danger")
                 return redirect("/login")
@@ -158,7 +158,7 @@ def register():
         # connect with database
         with sql.connect("sqlite.db") as con:
             cur = con.cursor()
-            user_name = str.lower(request.form.get("user_name"))
+            user_name = request.form.get("user_name")
             if not user_name:
                 flash("Please provide User Name", "danger")
                 return redirect("/register")
@@ -318,7 +318,8 @@ def add_account():
                 # Check in database if user already use that account name
                 cur.execute(
                     """SELECT * FROM account WHERE user_id = ? 
-                    AND account_name = ?""", (user_id, account_name))
+                    AND account_name = ?""", 
+                    (user_id, account_name))
                 if cur.fetchone():
                     flash("You already have an account with that name", 
                           "danger")
@@ -332,10 +333,10 @@ def add_account():
                 # Add new user's account to database
                 cur.execute(
                     """INSERT INTO account 
-                    (account_name, user_id, starting_balance) 
-                    VALUES (?, ?, ?)""", 
+                    (account_name, user_id, starting_balance)
+                    VALUES (?, ?, ?)""",
                     (account_name, user_id, starting_balance))
-                con.commit()  
+                con.commit()
             con.close()
             flash("You have successfully add new account", "success")
         return redirect("/accounts")
@@ -1066,7 +1067,7 @@ def category_delete(category_id):
 def login_change():
     """User login change"""
     if request.method == "POST":
-        new_user_name = str.lower(request.form.get("new_user_name"))
+        new_user_name = request.form.get("new_user_name")
         if not new_user_name:
             flash("You must provide new Login", "danger")
             return redirect("/login_change")
