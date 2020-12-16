@@ -614,13 +614,11 @@ def transaction(transaction_id):
             con.row_factory = sql.Row
             cur = con.cursor()
             cur.execute(
-                "SELECT * FROM transactions WHERE transaction_id = ?", 
-                (transaction_id,))
+                """SELECT * FROM transactions WHERE transaction_id = ? 
+                AND user_id = ?""", (transaction_id, session["user_id"]))
             transaction_db = cur.fetchone()
-            if (not transaction_db 
-                or transaction_id != transaction_db["transaction_id"] 
-                or session["user_id"] != transaction_db["user_id"]):
-                flash("Database error. Contact with admin", "danger")
+            if not transaction_db:
+                flash("Access denied", "danger")
                 return redirect("/")
             # Create transaction dictionary
             transaction_dict = {}
@@ -672,6 +670,12 @@ def delete_transaction(transaction_id):
     """Delete transaction"""
     with sql.connect("sqlite.db") as con:
         cur = con.cursor()
+        cur.execute("""SELECT * FROM transactions WHERE transaction_id = ? 
+                    AND user_id = ?""", (transaction_id, session["user_id"]))
+        transaction_db = cur.fetchone()
+        if not transaction_db:
+            flash("Access denied", "danger")
+            return redirect("/")
         cur.execute("DELETE FROM transactions WHERE transaction_id = ?", 
                     (transaction_id,))
         con.commit()
@@ -708,15 +712,22 @@ def payees():
 @login_required
 def payee_add():
     """Add new payee"""
+    payee_name = request.form.get("payee_name")
     if not request.form.get("payee_name"):
         flash("You must enter the name of the payee", "danger")
     else:
         with sql.connect("sqlite.db") as con:
             cur = con.cursor()
+            cur.execute("""SELECT * FROM payee WHERE payee_name = ? 
+                        AND user_id = ?""", (payee_name, session["user_id"]))
+            payee_exist = cur.fetchone()
+            if payee_exist:
+                flash("Payee already exist", "waring")
+                return redirect("/payees")
             cur.execute(
                 """INSERT INTO payee (payee_name, user_id, description) 
-                VALUES (?, ?, ?)""", (request.form.get("payee_name"),
-                session["user_id"], request.form.get("description")))
+                VALUES (?, ?, ?)""", (payee_name, session["user_id"], 
+                request.form.get("description")))
             con.commit()
         con.close()
         flash("Payee added", "success")
@@ -731,20 +742,25 @@ def payee(payee_id):
         con.row_factory = sql.Row
         cur = con.cursor()
         # payee name
-        cur.execute("SELECT * FROM payee WHERE payee_id = ?", (payee_id,))
-        payee_db = cur.fetchall()[0]
+        user_id = session["user_id"]
+        cur.execute("SELECT * FROM payee WHERE payee_id = ? AND user_id = ?",
+                    (payee_id, user_id))
+        payee_db = cur.fetchone()
+        if not payee_db:
+            flash("Access denied", "danger")
+            return redirect("/payees")
         payee_name = payee_db["payee_name"]
         description = payee_db["description"]
         if description == None:
             description = ""
         # category list
-        category_list_dict = category_list_from_db(session["user_id"], cur)
+        category_list_dict = category_list_from_db(user_id, cur)
         # account list
-        account_list_dict = account_list_from_db(session["user_id"], cur)
+        account_list_dict = account_list_from_db(user_id, cur)
         # transaction list
         cur.execute(
             """SELECT * FROM transactions WHERE user_id = ? AND payee_id = ? 
-            ORDER BY date""", (session["user_id"], payee_id))
+            ORDER BY date""", (user_id, payee_id))
         trans_db = cur.fetchall()
     con.close()
     total = 0
@@ -782,8 +798,15 @@ def payee_edit(payee_id):
         new_description = request.form.get("description")
         with sql.connect("sqlite.db") as con:
             cur = con.cursor()
+            cur.execute(
+                "SELECT * FROM payee WHERE payee_id = ? AND user_id = ?",
+                (payee_id, session["user_id"]))
+            payee_db = cur.fetchone()
+            if not payee_db:
+                flash("Access denied", "danger")
+                return redirect("/payees")
             cur.execute("""UPDATE payee SET payee_name = ?, description = ?
-                        WHERE payee_id = ?""", 
+                        WHERE payee_id = ?""",
                         (new_payee_name, new_description, payee_id,))
             con.commit()
         con.close()
@@ -793,12 +816,13 @@ def payee_edit(payee_id):
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
-            cur.execute("SELECT * FROM payee WHERE payee_id = ?", (payee_id,))
-            payee_db = cur.fetchall()[0]
-            user_id = payee_db["user_id"]
-            if user_id != session["user_id"]:
-                flash("Error", "danger")
-                return redirect("/")
+            cur.execute(
+                "SELECT * FROM payee WHERE payee_id = ? AND user_id = ?", 
+                (payee_id, session["user_id"]))
+            payee_db = cur.fetchone()
+            if not payee_db:
+                flash("Access denied", "danger")
+                return redirect("/payees")
             payee_name = payee_db["payee_name"]
             description = payee_db["description"]
         con.close()
@@ -845,13 +869,13 @@ def payee_delete(payee_id):
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
-            cur.execute("SELECT * FROM payee WHERE payee_id = ?", 
-                        (payee_id,))
-            payee_db = cur.fetchall()[0]
-            user_id = payee_db["user_id"]
-            if user_id != session["user_id"]:
-                flash("Error", "danger")
-                return redirect("/")
+            cur.execute(
+                "SELECT * FROM payee WHERE payee_id = ? AND user_id = ?", 
+                (payee_id, session["user_id"]))
+            payee_db = cur.fetchone()
+            if not payee_db:
+                flash("Access denied", "danger")
+                return redirect("/payees")
             payee_name = payee_db["payee_name"]
             payee_list_dict = payee_list_from_db(session["user_id"], 
                                                        cur)
@@ -861,8 +885,7 @@ def payee_delete(payee_id):
                       to delete will be reassigned""", "warning")
                 return redirect(f"/payee_edit/{payee_id}")
         con.close()
-        return render_template("payee_delete.html", 
-                               payee_id=payee_id, 
+        return render_template("payee_delete.html", payee_id=payee_id, 
                                payee_name=payee_name, 
                                payee_list_dict=payee_list_dict)  
 
@@ -911,7 +934,7 @@ def category_add():
                 cur.execute(
                     """INSERT INTO category (category_name, user_id) 
                     VALUES (?, ?)""", 
-                    (request.form.get("category_name"),session["user_id"]))
+                    (request.form.get("category_name"), session["user_id"]))
                 con.commit()
         con.close()
         flash("Category added", "success")
@@ -926,19 +949,21 @@ def category(category_id):
         con.row_factory = sql.Row
         cur = con.cursor()
         # payee name
-        cur.execute(
-            "SELECT category_name FROM category WHERE category_id = ?",
-            (category_id,))
+        cur.execute("""SELECT category_name FROM category 
+                    WHERE category_id = ? AND user_id = ?""",
+                    (category_id, session["user_id"]))
         category_name = cur.fetchone()[0]
+        if not category_name:
+            flash("Access denied", "danger")
+            return redirect("/categories")
         # category list
         payee_list_dict = payee_list_from_db(session["user_id"], cur)
         # account list
         account_list_dict = account_list_from_db(session["user_id"], cur)
         # transaction list
-        cur.execute(
-            """SELECT * FROM transactions 
-            WHERE user_id = ? AND category_id = ? ORDER BY date""", 
-            (session["user_id"], category_id))
+        cur.execute("""SELECT * FROM transactions 
+                    WHERE user_id = ? AND category_id = ? ORDER BY date""", 
+                    (session["user_id"], category_id))
         trans_db = cur.fetchall()
     con.close()
     total = 0
@@ -978,6 +1003,13 @@ def category_edit(category_id):
         else:
             with sql.connect("sqlite.db") as con:
                 cur = con.cursor()
+                cur.execute("""SELECT * FROM category 
+                            WHERE category_id = ? and user_id = ?""",
+                            (category_id, session["user_id"]))
+                category_db = cur.fetchone()
+                if not category_db:
+                    flash("Access denied", "danger")
+                    return redirect("/categories")
                 cur.execute("""UPDATE category SET category_name = ?
                             WHERE category_id = ?""", 
                             (new_category_name, category_id,))
@@ -989,12 +1021,12 @@ def category_edit(category_id):
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
-            cur.execute("SELECT * FROM category WHERE category_id = ?", (category_id,))
-            category_db = cur.fetchall()[0]
-            user_id = category_db["user_id"]
-            if user_id != session["user_id"]:
-                flash("Error", "danger")
-                return redirect("/")
+            cur.execute("""SELECT * FROM category WHERE category_id = ? 
+                        AND user_id = ?""", (category_id, session["user_id"]))
+            category_db = cur.fetchone()
+            if not category_db:
+                flash("Access denied", "danger")
+                return redirect("/categories")
             category_name = category_db["category_name"]
         con.close()
         return render_template("category_edit.html", category_id=category_id, 
@@ -1025,6 +1057,9 @@ def category_delete(category_id):
                             WHERE category_name = ? AND user_id = ?""", 
                             (new_category, session["user_id"]))
                 new_category_id = cur.fetchone()[0]
+                if not new_category_id:
+                    flash("Access denied", "danger")
+                    return redirect("/categories")
                 cur.execute("""UPDATE transactions SET category_id = ? 
                             WHERE user_id = ? AND category_id = ?""",
                             (new_category_id, session["user_id"], 
@@ -1040,13 +1075,12 @@ def category_delete(category_id):
         with sql.connect("sqlite.db") as con:
             con.row_factory = sql.Row
             cur = con.cursor()
-            cur.execute("SELECT * FROM category WHERE category_id = ?", 
-                        (category_id,))
-            category_db = cur.fetchall()[0]
-            user_id = category_db["user_id"]
-            if user_id != session["user_id"]:
-                flash("Error", "danger")
-                return redirect("/")
+            cur.execute("""SELECT * FROM category WHERE category_id = ? 
+                        AND user_id = ?""", (category_id, session["user_id"]))
+            category_db = cur.fetchone()
+            if not category_db:
+                flash("Access denied", "danger")
+                return redirect("/categories")
             category_name = category_db["category_name"]
             category_list_dict = category_list_from_db(session["user_id"], 
                                                        cur)
