@@ -1115,6 +1115,9 @@ def login_change():
             cur.execute("SELECT hash FROM users WHERE user_id = ?", 
                         (session["user_id"],))
             hash_password = cur.fetchone()[0]
+            if not hash_password:
+                flash("Error in database", "danger")
+                return redirect("/")
             if not check_password_hash(hash_password, 
                                        request.form.get("password")):
                 flash("Incorrect password", "danger")
@@ -1161,7 +1164,10 @@ def password_change():
             cur.execute("SELECT hash FROM users WHERE user_id = ?", 
                         (session["user_id"],))
             hash_password = cur.fetchone()[0]
-            if not check_password_hash(hash_password, 
+            if not hash_password:
+                flash("Error in database", "danger")
+                return redirect("/")
+            if not check_password_hash(hash_password,
                                        request.form.get("password")):
                 flash("Incorrect current password", "danger")
                 return redirect("/password_change")
@@ -1176,7 +1182,7 @@ def password_change():
         flash("You have successfully change your password", "success")
         return redirect("/")
     else:
-        return render_template("user_password.html", 
+        return render_template("user_password.html",
                                user_name=session["user_name"])
 
 
