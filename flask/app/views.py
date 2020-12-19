@@ -478,7 +478,7 @@ def account_delete(account_id):
                         (account_id, session["user_id"]))
             con.commit()
         con.close
-        flash("Category deleted", "success")
+        flash("Account deleted", "success")
         return redirect("/accounts")
     else:
         with sql.connect("sqlite.db") as con:
