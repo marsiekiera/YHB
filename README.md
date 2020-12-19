@@ -1,69 +1,79 @@
 # YHB - Your Home Budget
 
-Your Home Budget is python (flask) web application.
+Your Home budget is python web application. It was created to help you control your expenses.
 
-## Installation
+Features available in the app:
+* user registration and login
+* change user login and password or delete user
+* add your accounts, edit, hide, and delete
+* transfer money between accounts
+* add, edit or delete payee and category
+* add a transaction with a given date, type (withdrawal or deposit), and assignment to the payee and category
+* freely modification of an existing transaction - change date, account, type, payee, category and also delete it
+* view transactions assigned to account, payee or category
+* see the current and previous month's expenses on the chart.
 
+
+## Tech
+I used the following technologies to build the Your Home Budget:
+
+* [Flask] - [Python] web application framework depends on the [Jinja] template engine and the [Werkzeug] WSGI toolkit
+* [Sqlite] - database engine
+* [Bootstrap] - CSS framework
+* [Chart.js] - JavaScript library for data visualization
+
+## Installation 
 Download the repository and use on of the below method
 
-### 1. Using the docker
+### 1. By creating a virtual environment
 
-You need [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
+To use this method, you will need installed [python 3] and [pip]
+In the repository location enter the following commands in linux terminal (if python or pip command doesn't work, try python3 and pip3 instead of):
+```sh
+$ cd flask
+$ python -m venv env
+$ source env/bin/activate
+$ pip install -r requirements.txt 
+$ cd app/static
+$ npm install chart.js --save
+$ cd -
+$ export FLASK_APP=run.py
+$ flask run
+```
+To quit use keyboard shortcuts CTRL + C
 
+### 2. Using the docker
+To use this method, you will need installed [docker] and [docker-compose].
 In the repository location enter the following commands in linux terminal:
 ```bash
-cd flask
+$ cd flask
+$ docker-compose build
+$ docker-compose up
 ```
-```bash
-docker-compose build
-```
-```bash
-docker-compose up
-```
-
 Open browser and go to the [http://127.0.0.1:8084](http://127.0.0.1:8084)
 
 To quit use keyboard shortcuts CTRL + C, then command:
 ```bash
-docker-compose down
+$ docker-compose down
 ```
-
-### 2. By creating a virtual environment
-
-You need python 3 installed.
-
-In the repository location enter the following commands in linux terminal (if python or pip command doesn't work, try python3 and pip3 instead of):
-```bash
-cd flask
-```
-```bash
-python -m venv env
-```
-```bash
-source env/bin/activate
-```
-```bash
-pip install -r requirements.txt 
-```
-```bash
-cd app/static
-```
-```bash
-npm install chart.js --save
-```
-```bash
-cd -
-```
-```bash
-export FLASK_APP=run.py
-```
-```bash
-flask run
-```
-To quit use keyboard shortcuts CTRL + C
 
 ### Log-in to app
 
-If you don't want to register, you can use the below login detail:
+If you don't want to register, you can use the below login detail of demo account:
 * Login: demo
 * Password: 1@Qw
+
+[//]: # (These are reference links used in the body http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
+
+   [git-repo-url]: <https://github.com/marsiekiera/YHB.git>
+   [yhb]: <https://github.com/marsiekiera/YHB>
+   [flask]: <https://flask.palletsprojects.com>
+   [sqlite]: <https://www.sqlite.org>
+   [bootstrap]: <https://getbootstrap.com>
+   [chart.js]: <https://www.chartjs.org>
+   [jinja]: <https://jinja.palletsprojects.com>
+   [Werkzeug]: <https://werkzeug.palletsprojects.com>
+   [python 3]: <https://www.python.org>
+   [docker]: <https://docs.docker.com/get-docker>
+   [docker-compose]: <https://docs.docker.com/compose/install>
+   [pip]: <https://pip.pypa.io/en/stable/installing>
