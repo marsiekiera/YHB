@@ -1,3 +1,9 @@
+## Table of contents
+* [General info and features](#YHB---Your-Home-Budget)
+* [Technologies](#technologies)
+* [Installation](#installation)
+* [Log-in to app](#Log-in-to-app)
+
 # YHB - Your Home Budget
 
 Your Home budget is python web application. It was created to help you control your expenses.
@@ -14,7 +20,7 @@ Features available in the app:
 * see the current and previous month's expenses on the chart.
 
 
-## Tech
+## Technologies
 I used the following technologies to build the Your Home Budget:
 
 * [Flask] - [Python] web application framework depends on the [Jinja] template engine and the [Werkzeug] WSGI toolkit
@@ -27,7 +33,7 @@ Download the repository and use on of the below method
 
 ### 1. By creating a virtual environment
 
-To use this method, you will need installed [python 3] and [pip]
+To use this method, you will need installed [python] 3 and [pip]
 In the repository location enter the following commands in linux terminal (if python or pip command doesn't work, try python3 and pip3 instead of):
 ```sh
 $ cd flask
@@ -57,7 +63,7 @@ To quit use keyboard shortcuts CTRL + C, then command:
 $ docker-compose down
 ```
 
-### Log-in to app
+## Log-in to app
 
 If you don't want to register, you can use the below login detail of demo account:
 * Login: demo
@@ -73,7 +79,7 @@ If you don't want to register, you can use the below login detail of demo accoun
    [chart.js]: <https://www.chartjs.org>
    [jinja]: <https://jinja.palletsprojects.com>
    [Werkzeug]: <https://werkzeug.palletsprojects.com>
-   [python 3]: <https://www.python.org>
+   [python]: <https://www.python.org>
    [docker]: <https://docs.docker.com/get-docker>
    [docker-compose]: <https://docs.docker.com/compose/install>
    [pip]: <https://pip.pypa.io/en/stable/installing>
