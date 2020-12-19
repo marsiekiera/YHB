@@ -29,7 +29,7 @@ I used the following technologies to build the Your Home Budget:
 * [Chart.js] - JavaScript library for data visualization
 
 ## Installation 
-Download the repository and use on of the below method
+Download the [repository] and use on of the below method
 
 ### 1. By creating a virtual environment
 
@@ -71,8 +71,7 @@ If you don't want to register, you can use the below login detail of demo accoun
 
 [//]: # (These are reference links used in the body http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
-   [git-repo-url]: <https://github.com/marsiekiera/YHB.git>
-   [yhb]: <https://github.com/marsiekiera/YHB>
+   [repository]: <https://github.com/marsiekiera/YHB.git>
    [flask]: <https://flask.palletsprojects.com>
    [sqlite]: <https://www.sqlite.org>
    [bootstrap]: <https://getbootstrap.com>
