@@ -43,7 +43,6 @@ $ pip install -r requirements.txt
 $ cd app/static
 $ npm install chart.js --save
 $ cd -
-$ export FLASK_APP=run.py
 $ flask run
 ```
 To quit use keyboard shortcuts CTRL + C
